@@ -1,0 +1,65 @@
+<div class="component-container" id="metricsConfigurationContainer">
+    <h2>Metrics Configuration</h2>
+
+    <div class="metrics-sliders">
+        <div class="metric-slider">
+            <label>
+                <span>Quantitative Weight:</span>
+                <span class="weight-value" id="quantitativeWeightValue">0.5</span>
+            </label>
+            <input
+                type="range"
+                id="quantitativeWeight"
+                min="0"
+                max="1"
+                step="0.1"
+                value="0.5"
+            />
+        </div>
+
+        <div class="metric-slider">
+            <label>
+                <span>Qualitative Weight:</span>
+                <span class="weight-value" id="qualitativeWeightValue">0.5</span>
+            </label>
+            <input
+                type="range"
+                id="qualitativeWeight"
+                min="0"
+                max="1"
+                step="0.1"
+                value="0.5"
+            />
+        </div>
+
+        <div class="metric-slider">
+            <label>
+                <span>Hallucination Detection Weight:</span>
+                <span class="weight-value" id="hallucinationWeightValue">0.3</span>
+            </label>
+            <input
+                type="range"
+                id="hallucinationWeight"
+                min="0"
+                max="1"
+                step="0.1"
+                value="0.3"
+            />
+        </div>
+
+        <div class="metric-slider">
+            <label>
+                <span>Safety Weight:</span>
+                <span class="weight-value" id="safetyWeightValue">0.2</span>
+            </label>
+            <input
+                type="range"
+                id="safetyWeight"
+                min="0"
+                max="1"
+                step="0.1"
+                value="0.2"
+            />
+        </div>
+    </div>
+</div>

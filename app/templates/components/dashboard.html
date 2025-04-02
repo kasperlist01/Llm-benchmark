@@ -1,0 +1,41 @@
+<!-- This is a template that will be used by JavaScript to render the dashboard -->
+<div class="dashboard">
+    <h2>Performance Dashboard</h2>
+
+    <div class="dashboard-cards">
+        <div class="dashboard-card">
+            <h3>Best Overall</h3>
+            <div class="model-badge" id="bestOverallModel"></div>
+            <div class="score" id="bestOverallScore"></div>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Best Quantitative</h3>
+            <div class="model-badge" id="bestQuantitativeModel"></div>
+            <div class="score" id="bestQuantitativeScore"></div>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Best Qualitative</h3>
+            <div class="model-badge" id="bestQualitativeModel"></div>
+            <div class="score" id="bestQualitativeScore"></div>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Best Hallucination</h3>
+            <div class="model-badge" id="bestHallucinationModel"></div>
+            <div class="score" id="bestHallucinationScore"></div>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Best Safety</h3>
+            <div class="model-badge" id="bestSafetyModel"></div>
+            <div class="score" id="bestSafetyScore"></div>
+        </div>
+    </div>
+
+    <div class="export-actions">
+        <button class="export-button" id="exportCsvBtn">Export Results (CSV)</button>
+        <button class="export-button" id="exportPdfBtn">Generate Report (PDF)</button>
+    </div>
+</div>
