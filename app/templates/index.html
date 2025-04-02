@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Benchmark Platform</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <h1>LLM Benchmark Platform</h1>
+        </header>
+
+        <div class="main-content">
+            <div class="configuration-panel">
+                <!-- Model Comparison Component -->
+                {% include 'components/model_comparison.html' %}
+
+                <!-- Benchmark Selector Component -->
+                {% include 'components/benchmark_selector.html' %}
+
+                <!-- Metrics Configuration Component -->
+                {% include 'components/metrics_configuration.html' %}
+
+                <button class="run-button" id="runBenchmarkBtn">
+                    Run Benchmark
+                </button>
+            </div>
+
+            <div class="results-panel">
+                <div id="resultsContainer">
+                    <div class="empty-results">
+                        <p>Select models and benchmarks, then run to see results</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Component -->
+        <div id="dashboardContainer">
+            <!-- Dashboard will be rendered here after results are available -->
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/modelComparison.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/benchmarkSelector.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/metricsConfiguration.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/resultsVisualization.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <script>
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize components
+            initModelComparison();
+            initBenchmarkSelector();
+            initMetricsConfiguration();
+
+            // Run benchmark button event listener
+            document.getElementById('runBenchmarkBtn').addEventListener('click', function() {
+                const selectedModels = getSelectedModels();
+                const selectedBenchmarks = getSelectedBenchmarks();
+                const metrics = getMetricsConfiguration();
+
+                if (selectedModels.length === 0 || selectedBenchmarks.length === 0) {
+                    alert('Please select at least one model and one benchmark');
+                    return;
+                }
+
+                // Show loading state
+                document.getElementById('resultsContainer').innerHTML = '<div class="loading">Running benchmarks...</div>';
+
+                // Run benchmark API call
+                fetch('/api/run-benchmark', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        selectedModels,
+                        selectedBenchmarks,
+                        metrics
+                    }),
+                })
+                .then(response => response.json())
+                .then(results => {
+                    // Render results visualization
+                    renderResultsVisualization(results, metrics);
+
+                    // Render dashboard
+                    renderDashboard(results);
+                })
+                .catch(error => {
+                    console.error('Error running benchmark:', error);
+                    document.getElementById('resultsContainer').innerHTML =
+                        '<div class="error">Error running benchmark. Please try again.</div>';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
