@@ -1,18 +1,35 @@
 // app/static/js/resultsVisualization.js
-// app/static/js/resultsVisualization.js
 let currentResults = [];
 let currentMetrics = {};
 let currentViewMode = 'composite';
 let selectedExampleIndex = null;
+let blindTestData = null;
+let currentTestType = 'standard';
 
 function renderResultsVisualization(results, metrics) {
-    currentResults = results;
+    // Store results and metrics
+    currentResults = results.standardResults || results;
     currentMetrics = metrics;
+    currentTestType = results.testType || 'standard';
+
+    // If blind test, store the blind test data
+    if (currentTestType === 'blind_test') {
+        blindTestData = results.blindTest;
+    }
 
     // Create results visualization container
     const resultsContainer = document.getElementById('resultsContainer');
     resultsContainer.innerHTML = '';
 
+    // Check which type of test to render
+    if (currentTestType === 'blind_test') {
+        renderBlindTestResults(resultsContainer);
+    } else {
+        renderStandardResults(resultsContainer);
+    }
+}
+
+function renderStandardResults(container) {
     const template = document.createElement('div');
     template.className = 'results-visualization';
 
@@ -36,7 +53,7 @@ function renderResultsVisualization(results, metrics) {
         </div>
     `;
 
-    resultsContainer.appendChild(template);
+    container.appendChild(template);
 
     // Add event listeners to view mode buttons
     const viewModeButtons = template.querySelectorAll('.view-mode-button');
@@ -52,6 +69,217 @@ function renderResultsVisualization(results, metrics) {
     // Render initial results
     updateResultsChart();
     renderDetailedComparison();
+}
+
+function renderBlindTestResults(container) {
+    const template = document.createElement('div');
+    template.className = 'blind-test-results';
+
+    template.innerHTML = `
+        <div class="blind-test-header">
+            <h2>Blind Test Comparison</h2>
+            <p class="blind-test-description">
+                Compare responses from two anonymous models and vote for the one you prefer.
+                After voting on all pairs, you can reveal which model is which.
+            </p>
+            <div class="blind-test-progress">
+                <span id="completedVotes">${blindTestData.completedVotes}</span> of
+                <span id="totalPairs">${blindTestData.totalPairs}</span> comparisons completed
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${(blindTestData.completedVotes / blindTestData.totalPairs) * 100}%"></div>
+            </div>
+        </div>
+
+        <div class="blind-test-pairs" id="blindTestPairs">
+            <!-- Test pairs will be rendered here -->
+        </div>
+
+        <div class="blind-test-results-summary" id="blindTestSummary" style="display: none;">
+            <h3>Results Summary</h3>
+            <div class="results-chart" id="blindTestChart"></div>
+            <button id="revealModelsBtn" class="reveal-models-btn">Reveal Models</button>
+        </div>
+    `;
+
+    container.appendChild(template);
+
+    // Render test pairs
+    renderBlindTestPairs();
+
+    // Check if all votes are completed to show summary
+    updateBlindTestSummary();
+}
+
+function renderBlindTestPairs() {
+    const pairsContainer = document.getElementById('blindTestPairs');
+    pairsContainer.innerHTML = '';
+
+    blindTestData.testPairs.forEach((pair, index) => {
+        const pairElement = document.createElement('div');
+        pairElement.className = `blind-test-pair ${pair.voted ? 'voted' : ''}`;
+        pairElement.id = `pair-${pair.promptId}`;
+
+        pairElement.innerHTML = `
+            <div class="blind-test-prompt">
+                <span class="prompt-number">${index + 1}.</span>
+                <span class="prompt-text">${pair.prompt}</span>
+                <span class="prompt-category">${pair.category}</span>
+            </div>
+
+            <div class="blind-test-responses">
+                <div class="response-container ${pair.voted && pair.responses[0].votes > 0 ? 'selected' : ''} ${pair.revealed ? 'revealed' : ''}">
+                    <div class="response-header">
+                        <span class="response-position">Response A ${pair.revealed ? `<span class="model-name-label">${blindTestData.models[pair.responses[0].modelIndex].name}</span>` : ''}</span>
+                        ${pair.voted && pair.responses[0].votes > 0 ? '<div class="vote-badge">Your choice</div>' : ''}
+                    </div>
+                    <div class="response-content">${pair.responses[0].response}</div>
+                    ${!pair.voted ? `
+                        <button class="vote-button" data-prompt-id="${pair.promptId}" data-position="A">
+                            Vote for A
+                        </button>
+                    ` : ''}
+                </div>
+
+                <div class="response-container ${pair.voted && pair.responses[1].votes > 0 ? 'selected' : ''} ${pair.revealed ? 'revealed' : ''}">
+                    <div class="response-header">
+                        <span class="response-position">Response B ${pair.revealed ? `<span class="model-name-label">${blindTestData.models[pair.responses[1].modelIndex].name}</span>` : ''}</span>
+                        ${pair.voted && pair.responses[1].votes > 0 ? '<div class="vote-badge">Your choice</div>' : ''}
+                    </div>
+                    <div class="response-content">${pair.responses[1].response}</div>
+                    ${!pair.voted ? `
+                        <button class="vote-button" data-prompt-id="${pair.promptId}" data-position="B">
+                            Vote for B
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        pairsContainer.appendChild(pairElement);
+    });
+
+    // Add event listeners to vote buttons
+    document.querySelectorAll('.vote-button').forEach(button => {
+        button.addEventListener('click', handleVote);
+    });
+
+    // Add event listener to reveal button if it exists
+    const revealButton = document.getElementById('revealModelsBtn');
+    if (revealButton) {
+        revealButton.addEventListener('click', revealModels);
+    }
+}
+
+function handleVote(event) {
+    const promptId = event.target.getAttribute('data-prompt-id');
+    const position = event.target.getAttribute('data-position');
+
+    // Send vote to server
+    fetch('/api/blind-test/vote', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            testData: blindTestData,
+            promptId: promptId,
+            position: position
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Update blind test data
+        blindTestData = data;
+
+        // Re-render pairs
+        renderBlindTestPairs();
+
+        // Update summary if needed
+        updateBlindTestSummary();
+    })
+    .catch(error => {
+        console.error('Error recording vote:', error);
+    });
+}
+
+function updateBlindTestSummary() {
+    const summaryContainer = document.getElementById('blindTestSummary');
+    const progressElement = document.getElementById('completedVotes');
+    const progressFill = document.querySelector('.progress-fill');
+
+    // Update progress
+    if (progressElement) {
+        progressElement.textContent = blindTestData.completedVotes;
+        progressFill.style.width = `${(blindTestData.completedVotes / blindTestData.totalPairs) * 100}%`;
+    }
+
+    // Show summary if all votes are completed
+    if (blindTestData.completedVotes === blindTestData.totalPairs) {
+        summaryContainer.style.display = 'block';
+        renderBlindTestChart();
+    } else {
+        summaryContainer.style.display = 'none';
+    }
+}
+
+function renderBlindTestChart() {
+    const chartContainer = document.getElementById('blindTestChart');
+    chartContainer.innerHTML = '';
+
+    // Create bars for each model
+    blindTestData.models.forEach((model, index) => {
+        const percentage = blindTestData.totalPairs > 0
+            ? (model.totalVotes / blindTestData.totalPairs) * 100
+            : 0;
+
+        const barContainer = document.createElement('div');
+        barContainer.className = 'result-bar-container';
+
+        barContainer.innerHTML = `
+            <div class="model-name">${model.revealed ? model.name : `Model ${index + 1}`}</div>
+            <div class="score-bar-wrapper">
+                <div class="score-bar" style="width: ${percentage}%; background-color: ${index === 0 ? '#4CAF50' : '#2196F3'}">
+                    <span class="score-value">${model.totalVotes} votes (${percentage.toFixed(1)}%)</span>
+                </div>
+            </div>
+        `;
+
+        chartContainer.appendChild(barContainer);
+    });
+}
+
+function revealModels() {
+    // Send request to reveal models
+    fetch('/api/blind-test/reveal', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            testData: blindTestData
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Update blind test data
+        blindTestData = data;
+
+        // Re-render everything
+        renderBlindTestPairs();
+        renderBlindTestChart();
+
+        // Hide reveal button
+        document.getElementById('revealModelsBtn').style.display = 'none';
+
+        // Update model names in chart
+        blindTestData.models.forEach((model, index) => {
+            document.querySelectorAll('.model-name')[index].textContent = model.name;
+        });
+    })
+    .catch(error => {
+        console.error('Error revealing models:', error);
+    });
 }
 
 function updateResultsChart() {
