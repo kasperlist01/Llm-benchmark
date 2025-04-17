@@ -51,7 +51,7 @@ def run_benchmark(selected_model_ids, selected_benchmark_ids, metrics_config):
             for prompt in example_prompts:
                 example = {
                     'prompt': prompt,
-                    'response': f"{model['name']}'s response: {generate_response(prompt, model['name'])}",
+                    'response': generate_response(prompt, model['name']),
                     'metrics': {
                         'accuracy': random.uniform(0, 100),
                         'clarity': random.uniform(0, 100),
