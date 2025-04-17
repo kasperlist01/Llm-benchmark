@@ -1,13 +1,19 @@
+<!-- app/templates/components/model_comparison.html -->
 <div class="component-container" id="modelComparisonContainer">
-    <h2>Models</h2>
-    <div class="models-grid" id="modelsGrid">
-        <!-- Models will be dynamically populated here -->
-    </div>
+    <h2 onclick="toggleComponent('modelComparison')">
+        Models
+        <span class="toggle-icon" id="modelComparisonToggle">▼</span>
+    </h2>
+    <div class="component-content" id="modelComparisonContent">
+        <div class="models-grid" id="modelsGrid">
+            <!-- Models will be dynamically populated here -->
+        </div>
 
-    <div class="selected-models">
-        <h3>Selected Models (<span id="selectedModelsCount">0</span>)</h3>
-        <div class="selected-models-list" id="selectedModelsList">
-            <!-- Selected models will be displayed here -->
+        <div class="selected-models">
+            <h3>Selected Models (<span id="selectedModelsCount">0</span>)</h3>
+            <div class="selected-models-list" id="selectedModelsList">
+                <!-- Selected models will be displayed here -->
+            </div>
         </div>
     </div>
 </div>

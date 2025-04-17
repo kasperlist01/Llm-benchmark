@@ -1,3 +1,4 @@
+<!-- app/templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,10 +38,6 @@
             </div>
         </div>
 
-        <!-- Dashboard Component -->
-        <div id="dashboardContainer">
-            <!-- Dashboard will be rendered here after results are available -->
-        </div>
     </div>
 
     <!-- JavaScript -->
@@ -48,8 +45,16 @@
     <script src="{{ url_for('static', filename='js/benchmarkSelector.js') }}"></script>
     <script src="{{ url_for('static', filename='js/metricsConfiguration.js') }}"></script>
     <script src="{{ url_for('static', filename='js/resultsVisualization.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
     <script>
+        // Component toggle functionality
+        function toggleComponent(componentName) {
+            const content = document.getElementById(`${componentName}Content`);
+            const toggle = document.getElementById(`${componentName}Toggle`);
+
+            content.classList.toggle('collapsed');
+            toggle.classList.toggle('collapsed');
+        }
+
         // Initialize application
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize components
@@ -87,9 +92,6 @@
                 .then(results => {
                     // Render results visualization
                     renderResultsVisualization(results, metrics);
-
-                    // Render dashboard
-                    renderDashboard(results);
                 })
                 .catch(error => {
                     console.error('Error running benchmark:', error);

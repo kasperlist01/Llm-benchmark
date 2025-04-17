@@ -1,4 +1,5 @@
 // app/static/js/resultsVisualization.js
+// app/static/js/resultsVisualization.js
 let currentResults = [];
 let currentMetrics = {};
 let currentViewMode = 'composite';
@@ -121,10 +122,15 @@ function renderDetailedComparison() {
 
             sortedResults.forEach(result => {
                 const responseExample = result.scores[0].examples[exampleIndex];
+                const responseText = responseExample.response;
+
+                // Extract model name and response text
+                const modelName = result.model;
+                const formattedResponse = formatModelResponse(responseText, modelName);
 
                 rowHtml += `
                     <div class="comparison-cell response-cell">
-                        ${responseExample.response}
+                        ${formattedResponse}
                         ${selectedExampleIndex === exampleIndex ? `
                             <div class="metrics-detail">
                                 <div class="metric">
@@ -158,5 +164,19 @@ function renderDetailedComparison() {
 
             comparisonGrid.appendChild(row);
         });
+    }
+}
+
+function formatModelResponse(responseText, modelName) {
+    // Check if the response already contains the model name
+    if (responseText.includes(`${modelName}'s response:`)) {
+        // Replace the model name format with a better styled version
+        return responseText.replace(
+            `${modelName}'s response:`,
+            `<span class="model-response-header">${modelName}'s response:</span>`
+        );
+    } else {
+        // Add the model name if it doesn't exist
+        return `<span class="model-response-header">${modelName}'s response:</span><p class="response-text">${responseText}</p>`;
     }
 }
