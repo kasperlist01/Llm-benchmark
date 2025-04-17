@@ -72,5 +72,68 @@ def get_benchmarks():
             'description': 'Evaluates quality of generated code in multiple languages',
             'category': 'code',
             'metrics': ['correctness', 'efficiency']
+        },
+        {
+            'id': 'blind_test',
+            'name': 'Blind Test',
+            'description': 'Compare two models through blind testing where you vote for the better response',
+            'category': 'user_eval',
+            'metrics': ['user_preference', 'qualitative']
+        }
+    ]
+
+
+def get_blind_test_prompts():
+    """Get list of prompts for blind testing"""
+    return [
+        {
+            'id': 'creative_story',
+            'prompt': 'Write a short creative story about a time traveler who accidentally changes history.',
+            'category': 'creative'
+        },
+        {
+            'id': 'explain_concept',
+            'prompt': 'Explain how blockchain technology works to a 10-year-old.',
+            'category': 'explanation'
+        },
+        {
+            'id': 'solve_problem',
+            'prompt': 'A spaceship travels at 20,000 km/h. How long will it take to reach Alpha Centauri, which is 4.37 light years away?',
+            'category': 'problem_solving'
+        },
+        {
+            'id': 'ethical_dilemma',
+            'prompt': 'Discuss the ethical implications of using AI in healthcare decision-making.',
+            'category': 'ethics'
+        },
+        {
+            'id': 'summarize_text',
+            'prompt': 'Summarize the key arguments for and against universal basic income.',
+            'category': 'summarization'
+        },
+        {
+            'id': 'code_solution',
+            'prompt': 'Write a Python function to check if a string is a palindrome.',
+            'category': 'coding'
+        },
+        {
+            'id': 'persuasive_text',
+            'prompt': 'Write a persuasive argument for why space exploration should be a priority for humanity.',
+            'category': 'persuasion'
+        },
+        {
+            'id': 'analyze_poem',
+            'prompt': 'Analyze the themes and symbolism in Robert Frost\'s poem "The Road Not Taken".',
+            'category': 'analysis'
+        },
+        {
+            'id': 'business_advice',
+            'prompt': 'Provide advice for a small business owner looking to expand their online presence.',
+            'category': 'business'
+        },
+        {
+            'id': 'historical_context',
+            'prompt': 'Explain the historical context and significance of the Industrial Revolution.',
+            'category': 'history'
         }
     ]

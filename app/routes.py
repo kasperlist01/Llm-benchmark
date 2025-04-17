@@ -1,15 +1,17 @@
 # app/routes.py
 from flask import Blueprint, render_template, jsonify, request
 from app.models.model_data import get_available_models
-from app.models.benchmark_data import get_benchmarks
-from app.services.benchmark_service import run_benchmark
+from app.models.benchmark_data import get_benchmarks, get_blind_test_prompts
+from app.services.benchmark_service import run_benchmark, record_blind_test_vote, reveal_blind_test_models
 
 main_bp = Blueprint('main', __name__)
+
 
 @main_bp.route('/')
 def index():
     """Render the main application page"""
     return render_template('index.html')
+
 
 @main_bp.route('/api/models')
 def get_models():
@@ -17,11 +19,20 @@ def get_models():
     models = get_available_models()
     return jsonify(models)
 
+
 @main_bp.route('/api/benchmarks')
 def get_all_benchmarks():
     """API endpoint to get all benchmarks"""
     benchmarks = get_benchmarks()
     return jsonify(benchmarks)
+
+
+@main_bp.route('/api/blind-test-prompts')
+def get_prompts_for_blind_test():
+    """API endpoint to get prompts for blind testing"""
+    prompts = get_blind_test_prompts()
+    return jsonify(prompts)
+
 
 @main_bp.route('/api/run-benchmark', methods=['POST'])
 def benchmark():
@@ -39,10 +50,48 @@ def benchmark():
     if not selected_models or not selected_benchmarks:
         return jsonify({'error': 'Please select at least one model and one benchmark'}), 400
 
+    # Check if blind test is selected
+    if 'blind_test' in selected_benchmarks and len(selected_models) != 2:
+        return jsonify({'error': 'Blind Test requires exactly 2 models to be selected'}), 400
+
     # Run the benchmark with selected models and benchmarks
     results = run_benchmark(selected_models, selected_benchmarks, metrics_config)
 
     return jsonify(results)
+
+
+@main_bp.route('/api/blind-test/vote', methods=['POST'])
+def vote_blind_test():
+    """API endpoint to record a vote in the blind test"""
+    data = request.json
+    test_data = data.get('testData', {})
+    prompt_id = data.get('promptId')
+    position = data.get('position')  # 'A' or 'B'
+
+    if not test_data or not prompt_id or not position:
+        return jsonify({'error': 'Missing required data'}), 400
+
+    success = record_blind_test_vote(test_data, prompt_id, position)
+
+    if not success:
+        return jsonify({'error': 'Failed to record vote'}), 400
+
+    return jsonify(test_data)
+
+
+@main_bp.route('/api/blind-test/reveal', methods=['POST'])
+def reveal_models():
+    """API endpoint to reveal models in the blind test"""
+    data = request.json
+    test_data = data.get('testData', {})
+
+    if not test_data:
+        return jsonify({'error': 'Missing test data'}), 400
+
+    updated_data = reveal_blind_test_models(test_data)
+
+    return jsonify(updated_data)
+
 
 @main_bp.route('/api/export-results', methods=['POST'])
 def export_results():

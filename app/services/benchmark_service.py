@@ -1,7 +1,8 @@
 # app/services/benchmark_service.py
 import random
 from app.models.model_data import get_available_models
-from app.models.benchmark_data import get_benchmarks
+from app.models.benchmark_data import get_benchmarks, get_blind_test_prompts
+
 
 def run_benchmark(selected_model_ids, selected_benchmark_ids, metrics_config):
     """
@@ -23,18 +24,32 @@ def run_benchmark(selected_model_ids, selected_benchmark_ids, metrics_config):
     selected_models = [model for model in all_models if model['id'] in selected_model_ids]
     selected_benchmarks = [benchmark for benchmark in all_benchmarks if benchmark['id'] in selected_benchmark_ids]
 
+    # Check if blind test is selected
+    blind_test_selected = 'blind_test' in selected_benchmark_ids
+
+    # For blind test, we need exactly 2 models
+    if blind_test_selected and len(selected_models) != 2:
+        return {'error': 'Blind Test requires exactly 2 models to be selected'}
+
     # Simulate benchmark results
     results = []
     for model in selected_models:
         model_result = {
             'model': model['name'],
+            'modelId': model['id'],
             'scores': [],
             'compositeScore': random.uniform(0, 100)
         }
 
         for benchmark in selected_benchmarks:
+            if benchmark['id'] == 'blind_test':
+                # Skip blind test for individual model results
+                # We'll handle it separately
+                continue
+
             benchmark_score = {
                 'benchmark': benchmark['name'],
+                'benchmarkId': benchmark['id'],
                 'quantitativeScore': random.uniform(0, 100),
                 'qualitativeScore': random.uniform(0, 100),
                 'hallucinationScore': random.uniform(0, 100),
@@ -64,7 +79,20 @@ def run_benchmark(selected_model_ids, selected_benchmark_ids, metrics_config):
 
         results.append(model_result)
 
-    return results
+    # Add blind test data if selected
+    if blind_test_selected and len(selected_models) == 2:
+        blind_test_data = generate_blind_test_data(selected_models)
+        return {
+            'standardResults': results,
+            'blindTest': blind_test_data,
+            'testType': 'blind_test'
+        }
+
+    return {
+        'standardResults': results,
+        'testType': 'standard'
+    }
+
 
 def generate_response(prompt, model_name):
     """Generate a simulated response for a given prompt and model"""
@@ -86,3 +114,83 @@ def generate_response(prompt, model_name):
         return responses[prompt].get(model_name, responses[prompt]['default'])
     else:
         return f"This is a simulated response from {model_name} for the prompt: {prompt}"
+
+
+def generate_blind_test_data(selected_models):
+    """Generate data for blind test comparison between two models"""
+    # Get prompts for blind testing
+    prompts = get_blind_test_prompts()
+
+    # Randomly select 5 prompts
+    selected_prompts = random.sample(prompts, min(5, len(prompts)))
+
+    # Generate test pairs
+    test_pairs = []
+    for prompt in selected_prompts:
+        # Randomly decide which model appears first
+        model_order = list(range(2))
+        random.shuffle(model_order)
+
+        pair = {
+            'promptId': prompt['id'],
+            'prompt': prompt['prompt'],
+            'category': prompt['category'],
+            'responses': [
+                {
+                    'position': 'A',
+                    'modelIndex': model_order[0],  # This is the actual model index (0 or 1)
+                    'response': generate_response(prompt['prompt'], selected_models[model_order[0]]['name']),
+                    'votes': 0
+                },
+                {
+                    'position': 'B',
+                    'modelIndex': model_order[1],  # This is the actual model index (0 or 1)
+                    'response': generate_response(prompt['prompt'], selected_models[model_order[1]]['name']),
+                    'votes': 0
+                }
+            ],
+            'voted': False,
+            'revealed': False
+        }
+        test_pairs.append(pair)
+
+    return {
+        'models': [
+            {'name': selected_models[0]['name'], 'id': selected_models[0]['id'], 'totalVotes': 0},
+            {'name': selected_models[1]['name'], 'id': selected_models[1]['id'], 'totalVotes': 0}
+        ],
+        'testPairs': test_pairs,
+        'completedVotes': 0,
+        'totalPairs': len(selected_prompts)
+    }
+
+
+def record_blind_test_vote(test_data, prompt_id, position):
+    """Record a vote for a particular response in the blind test"""
+    for pair in test_data['testPairs']:
+        if pair['promptId'] == prompt_id:
+            # Mark as voted
+            pair['voted'] = True
+
+            # Increment vote count for the selected response
+            response_index = 0 if position == 'A' else 1
+            pair['responses'][response_index]['votes'] += 1
+
+            # Update the model's total votes
+            model_index = pair['responses'][response_index]['modelIndex']
+            test_data['models'][model_index]['totalVotes'] += 1
+
+            # Increment completed votes counter
+            test_data['completedVotes'] += 1
+
+            return True
+
+    return False
+
+
+def reveal_blind_test_models(test_data):
+    """Reveal which model is which in all test pairs"""
+    for pair in test_data['testPairs']:
+        pair['revealed'] = True
+
+    return test_data
