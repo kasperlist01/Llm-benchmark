@@ -3,8 +3,8 @@ let availableModels = [];
 let selectedModels = [];
 
 function initModelComparison() {
-    // Fetch available models from API
-    fetch('/api/models')
+    // Fetch available models from API (now including user models)
+    fetch('/api/all-models')
         .then(response => response.json())
         .then(models => {
             availableModels = models;
@@ -23,6 +23,12 @@ function renderModels() {
         const isSelected = selectedModels.some(m => m.id === model.id);
         const modelCard = document.createElement('div');
         modelCard.className = `model-card ${isSelected ? 'selected' : ''}`;
+
+        // Add custom class for user models
+        if (model.type === 'custom') {
+            modelCard.classList.add('custom-model');
+        }
+
         modelCard.innerHTML = `
             <div class="model-icon" style="background-color: ${model.color}">
                 ${model.name.substring(0, 2)}
@@ -33,6 +39,7 @@ function renderModels() {
                 <div class="model-tags">
                     ${model.type === 'api' ? '<span class="tag api-tag">API</span>' : ''}
                     ${model.type === 'open' ? '<span class="tag open-tag">Open Source</span>' : ''}
+                    ${model.type === 'custom' ? '<span class="tag custom-tag">Custom</span>' : ''}
                     ${model.size ? `<span class="tag size-tag">${model.size}</span>` : ''}
                 </div>
             </div>
@@ -62,6 +69,14 @@ function updateSelectedModelsList() {
 
     selectedModelsCount.textContent = selectedModels.length;
     selectedModelsList.innerHTML = '';
+
+    if (selectedModels.length === 0) {
+        const emptyMessage = document.createElement('p');
+        emptyMessage.className = 'empty-selection';
+        emptyMessage.textContent = 'No models selected';
+        selectedModelsList.appendChild(emptyMessage);
+        return;
+    }
 
     selectedModels.forEach(model => {
         const pill = document.createElement('div');

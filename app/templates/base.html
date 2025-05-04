@@ -13,7 +13,10 @@
             <h1>LLM Benchmark Platform</h1>
             <nav class="nav-links">
                 {% if current_user.is_authenticated %}
-                    <span class="user-welcome">Welcome, {{ current_user.username }}</span>
+                    <a href="{{ url_for('main.index') }}">Dashboard</a>
+                    <a href="{{ url_for('user.models') }}">My Models</a>
+                    <a href="{{ url_for('user.settings') }}">Settings</a>
+                    <span class="user-welcome">{{ current_user.username }}</span>
                     <a href="{{ url_for('auth.logout') }}">Logout</a>
                 {% else %}
                     <a href="{{ url_for('auth.login') }}">Login</a>
