@@ -1,5 +1,6 @@
 # app/routes.py
 from flask import Blueprint, render_template, jsonify, request
+from flask_login import login_required
 from app.models.model_data import get_available_models
 from app.models.benchmark_data import get_benchmarks, get_blind_test_prompts
 from app.services.benchmark_service import run_benchmark, record_blind_test_vote, reveal_blind_test_models
@@ -8,12 +9,14 @@ main_bp = Blueprint('main', __name__)
 
 
 @main_bp.route('/')
+@login_required
 def index():
     """Render the main application page"""
     return render_template('index.html')
 
 
 @main_bp.route('/api/models')
+@login_required
 def get_models():
     """API endpoint to get all available models"""
     models = get_available_models()
@@ -21,6 +24,7 @@ def get_models():
 
 
 @main_bp.route('/api/benchmarks')
+@login_required
 def get_all_benchmarks():
     """API endpoint to get all benchmarks"""
     benchmarks = get_benchmarks()
@@ -28,6 +32,7 @@ def get_all_benchmarks():
 
 
 @main_bp.route('/api/blind-test-prompts')
+@login_required
 def get_prompts_for_blind_test():
     """API endpoint to get prompts for blind testing"""
     prompts = get_blind_test_prompts()
@@ -35,6 +40,7 @@ def get_prompts_for_blind_test():
 
 
 @main_bp.route('/api/run-benchmark', methods=['POST'])
+@login_required
 def benchmark():
     """API endpoint to run benchmarks on selected models"""
     data = request.json
@@ -61,6 +67,7 @@ def benchmark():
 
 
 @main_bp.route('/api/blind-test/vote', methods=['POST'])
+@login_required
 def vote_blind_test():
     """API endpoint to record a vote in the blind test"""
     data = request.json
@@ -80,6 +87,7 @@ def vote_blind_test():
 
 
 @main_bp.route('/api/blind-test/reveal', methods=['POST'])
+@login_required
 def reveal_models():
     """API endpoint to reveal models in the blind test"""
     data = request.json
@@ -94,6 +102,7 @@ def reveal_models():
 
 
 @main_bp.route('/api/export-results', methods=['POST'])
+@login_required
 def export_results():
     """API endpoint to export benchmark results"""
     data = request.json
