@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="user-models-container">
+    <div class="page-header">
+        <h1>My Models</h1>
+        <button id="addModelBtn" class="btn btn-primary">Add New Model</button>
+    </div>
+
+    <div class="models-list">
+        {% if models %}
+            {% for model in models %}
+            <div class="model-card">
+                <div class="model-header">
+                    <div class="model-icon" style="background-color: {{ model.color }}">
+                        {{ model.name[:2] }}
+                    </div>
+                    <div class="model-info">
+                        <h3>{{ model.name }}</h3>
+                        <p>{{ model.provider }}</p>
+                    </div>
+                </div>
+
+                <div class="model-details">
+                    {% if model.description %}
+                    <p class="model-description">{{ model.description }}</p>
+                    {% endif %}
+
+                    {% if model.api_url %}
+                    <div class="model-endpoint">
+                        <span class="label">API Endpoint:</span>
+                        <span class="value">{{ model.api_url }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="model-actions">
+                    <button class="btn btn-secondary test-model-btn" data-id="{{ model.id }}"
+                            data-url="{{ model.api_url }}" data-key="{{ model.api_key }}">
+                        Test Connection
+                    </button>
+                    <form action="{{ url_for('user.delete_model', model_id=model.id) }}" method="POST"
+                          onsubmit="return confirm('Are you sure you want to delete this model?');">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-models">
+                <p>You haven't added any custom models yet.</p>
+                <p>Click "Add New Model" to get started.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Add Model Modal -->
+    <div id="addModelModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add New Model</h2>
+
+            <form method="POST" action="{{ url_for('user.add_model') }}">
+                {{ form.hidden_tag() }}
+
+                <div class="form-group">
+                    {{ form.name.label }}
+                    {{ form.name(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.provider.label }}
+                    {{ form.provider(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.description.label }}
+                    {{ form.description(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.api_url.label }}
+                    {{ form.api_url(class="form-control") }}
+                    <small class="form-text text-muted">Optional: Enter if you want to test API connection</small>
+                </div>
+
+                <div class="form-group">
+                    {{ form.api_key.label }}
+                    {{ form.api_key(class="form-control") }}
+                    <small class="form-text text-muted">Optional: Required only if your API needs authentication</small>
+                </div>
+
+                <div class="form-group">
+                    {{ form.color.label }}
+                    {{ form.color(class="form-control color-picker") }}
+                    <small class="form-text text-muted">Optional: Choose a color for your model (e.g. #FF5733)</small>
+                </div>
+
+                <div class="test-result" id="testResult" style="display: none;">
+                    <div class="test-message"></div>
+                    <pre class="test-details"></pre>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="testConnectionBtn" class="btn btn-secondary">Test Connection</button>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Modal functionality
+        const modal = document.getElementById('addModelModal');
+        const btn = document.getElementById('addModelBtn');
+        const span = document.getElementsByClassName('close')[0];
+
+        btn.onclick = function() {
+            modal.style.display = 'block';
+        }
+
+        span.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Test connection in modal
+        const testBtn = document.getElementById('testConnectionBtn');
+        const apiUrlInput = document.getElementById('api_url');
+        const apiKeyInput = document.getElementById('api_key');
+        const testResult = document.getElementById('testResult');
+        const testMessage = document.querySelector('.test-message');
+        const testDetails = document.querySelector('.test-details');
+
+        testBtn.addEventListener('click', function() {
+            const apiUrl = apiUrlInput.value.trim();
+            const apiKey = apiKeyInput.value.trim();
+
+            if (!apiUrl) {
+                testResult.style.display = 'block';
+                testMessage.textContent = 'API URL is required for testing';
+                testMessage.className = 'test-message error';
+                return;
+            }
+
+            testBtn.disabled = true;
+            testBtn.textContent = 'Testing...';
+            testResult.style.display = 'block';
+            testMessage.textContent = 'Testing connection...';
+            testMessage.className = 'test-message testing';
+
+            fetch('/user/models/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    api_url: apiUrl,
+                    api_key: apiKey
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                testBtn.disabled = false;
+                testBtn.textContent = 'Test Connection';
+
+                if (data.success) {
+                    testMessage.textContent = data.message;
+                    testMessage.className = 'test-message success';
+
+                    if (data.response) {
+                        testDetails.textContent = JSON.stringify(data.response, null, 2);
+                        testDetails.style.display = 'block';
+                    } else {
+                        testDetails.style.display = 'none';
+                    }
+                } else {
+                    testMessage.textContent = data.message;
+                    testMessage.className = 'test-message error';
+                    testDetails.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                testBtn.disabled = false;
+                testBtn.textContent = 'Test Connection';
+                testMessage.textContent = 'Error testing connection: ' + error.message;
+                testMessage.className = 'test-message error';
+                testDetails.style.display = 'none';
+            });
+        });
+
+        // Test connection for existing models
+        document.querySelectorAll('.test-model-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const apiUrl = this.getAttribute('data-url');
+                const apiKey = this.getAttribute('data-key');
+
+                if (!apiUrl) {
+                    alert('This model does not have an API URL configured');
+                    return;
+                }
+
+                this.disabled = true;
+                this.textContent = 'Testing...';
+
+                fetch('/user/models/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        api_url: apiUrl,
+                        api_key: apiKey
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    this.disabled = false;
+                    this.textContent = 'Test Connection';
+
+                    if (data.success) {
+                        alert('Connection successful: ' + data.message);
+                    } else {
+                        alert('Connection failed: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    this.disabled = false;
+                    this.textContent = 'Test Connection';
+                    alert('Error testing connection: ' + error.message);
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

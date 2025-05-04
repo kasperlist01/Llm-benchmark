@@ -1,8 +1,9 @@
 # app/routes.py
 from flask import Blueprint, render_template, jsonify, request
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app.models.model_data import get_available_models
 from app.models.benchmark_data import get_benchmarks, get_blind_test_prompts
+from app.models.user_model import UserModel
 from app.services.benchmark_service import run_benchmark, record_blind_test_vote, reveal_blind_test_models
 
 main_bp = Blueprint('main', __name__)
@@ -112,3 +113,26 @@ def export_results():
     # In a real application, this would generate and return a file
     # For now, we'll just return a success message
     return jsonify({'message': f'Results exported as {export_format}'})
+
+
+@main_bp.route('/api/user-models')
+@login_required
+def get_user_models():
+    """API endpoint to get user's custom models"""
+    user_models = UserModel.query.filter_by(user_id=current_user.id, is_active=True).all()
+    return jsonify([model.to_dict() for model in user_models])
+
+
+@main_bp.route('/api/all-models')
+@login_required
+def get_all_models():
+    """API endpoint to get all available models including user's custom models"""
+    # Get standard models
+    standard_models = get_available_models()
+
+    # Get user's custom models
+    user_models = UserModel.query.filter_by(user_id=current_user.id, is_active=True).all()
+    custom_models = [model.to_dict() for model in user_models]
+
+    # Combine and return
+    return jsonify(standard_models + custom_models)
