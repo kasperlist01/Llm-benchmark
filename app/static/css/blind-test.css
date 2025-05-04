@@ -1,0 +1,192 @@
+/* app/static/css/blind-test.css */
+/* Blind Test Styles */
+.blind-test-results {
+  padding: 20px;
+}
+
+.blind-test-header {
+  margin-bottom: 24px;
+}
+
+.blind-test-description {
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.blind-test-progress {
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.progress-bar {
+  height: 8px;
+  background-color: #f3f4f6;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--primary-color);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.blind-test-pairs {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.blind-test-pair {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.blind-test-pair:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.blind-test-pair.voted {
+  border-color: var(--primary-color);
+  background-color: rgba(37, 99, 235, 0.02);
+}
+
+.blind-test-prompt {
+  padding: 16px;
+  background-color: #f9fafb;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.prompt-number {
+  font-weight: 600;
+  color: var(--primary-color);
+  min-width: 20px;
+}
+
+.prompt-text {
+  flex: 1;
+  font-weight: 500;
+}
+
+.prompt-category {
+  font-size: 12px;
+  padding: 2px 8px;
+  background-color: #e5e7eb;
+  border-radius: 12px;
+  color: var(--text-secondary);
+}
+
+.blind-test-responses {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background-color: var(--border-color);
+}
+
+.response-container {
+  background-color: white;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+
+.response-container.selected {
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+.response-container.revealed {
+  background-color: rgba(37, 99, 235, 0.02);
+}
+
+.response-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-weight: 600;
+  min-height: 28px;
+  align-items: center;
+}
+
+.response-content {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.vote-button {
+  background-color: white;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.vote-button:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.vote-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+.blind-test-results-summary {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+}
+
+.reveal-models-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 24px;
+  transition: background-color 0.2s ease;
+}
+
+.reveal-models-btn:hover {
+  background-color: var(--primary-hover);
+}
+
+/* Responsive adjustments for blind test */
+@media (max-width: 768px) {
+  .blind-test-responses {
+    grid-template-columns: 1fr;
+  }
+
+  .response-container {
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .response-container:last-child {
+    border-bottom: none;
+  }
+}

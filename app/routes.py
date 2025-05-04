@@ -1,12 +1,20 @@
-# app/routes.py
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
 from app.models.model_data import get_available_models
 from app.models.benchmark_data import get_benchmarks, get_blind_test_prompts
 from app.models.user_model import UserModel
 from app.services.benchmark_service import run_benchmark, record_blind_test_vote, reveal_blind_test_models
+from functools import partial
 
 main_bp = Blueprint('main', __name__)
+
+
+# утилита: есть ли у модели реальный API‑доступ?
+def _has_api_access(model: dict) -> bool:
+    return (
+        model["type"] == "api"
+        or (model["type"] == "custom" and model.get("api_url"))
+    )
 
 
 @main_bp.route('/')
@@ -45,7 +53,7 @@ def get_prompts_for_blind_test():
 def benchmark():
     """API endpoint to run benchmarks on selected models"""
     data = request.json
-    selected_models = data.get('selectedModels', [])
+    selected_model_ids = data.get('selectedModels', [])
     selected_benchmarks = data.get('selectedBenchmarks', [])
     metrics_config = data.get('metrics', {
         'quantitative': {'weight': 0.5},
@@ -54,12 +62,38 @@ def benchmark():
         'safety': {'weight': 0.2}
     })
 
-    if not selected_models or not selected_benchmarks:
+    if not selected_model_ids or not selected_benchmarks:
         return jsonify({'error': 'Please select at least one model and one benchmark'}), 400
 
-    # Check if blind test is selected
-    if 'blind_test' in selected_benchmarks and len(selected_models) != 2:
-        return jsonify({'error': 'Blind Test requires exactly 2 models to be selected'}), 400
+    # Get full model details for selected models
+    selected_models = []
+    for model_id in selected_model_ids:
+        # Check if it's a custom model
+        if model_id.startswith('custom_'):
+            custom_id = int(model_id.split('_')[1])
+            user_model = UserModel.query.get(custom_id)
+            if user_model and user_model.user_id == current_user.id:
+                selected_models.append(user_model.to_dict())
+        else:
+            # It's a standard model
+            for model in get_available_models():
+                if model['id'] == model_id:
+                    selected_models.append(model)
+                    break
+
+    # 1) Если среди выбранных бенчмарков есть blind_test …
+    if 'blind_test' in selected_benchmarks:
+        # — он не должен сочетаться с другими
+        if len(selected_benchmarks) > 1:
+            return jsonify({'error': 'Blind Test cannot be combined with other benchmarks'}), 400
+
+        # — должно быть ровно 2 модели
+        if len(selected_models) != 2:
+            return jsonify({'error': 'Blind Test requires exactly 2 models'}), 400
+
+        # — и обе с API‑доступом
+        if not all(map(_has_api_access, selected_models)):
+            return jsonify({'error': 'Both models must provide an API endpoint for Blind Test'}), 400
 
     # Run the benchmark with selected models and benchmarks
     results = run_benchmark(selected_models, selected_benchmarks, metrics_config)

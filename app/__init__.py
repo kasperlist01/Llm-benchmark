@@ -27,7 +27,7 @@ def create_app(config_class=Config):
     from app.auth.routes import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
-    # Регистрируем новый blueprint для пользовательских настроек
+    # Регистрируем blueprint для пользовательских настроек
     from app.user.routes import user_bp
     app.register_blueprint(user_bp, url_prefix='/user')
 

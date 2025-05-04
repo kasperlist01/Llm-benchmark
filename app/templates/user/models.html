@@ -4,105 +4,140 @@
 <div class="user-models-container">
     <div class="page-header">
         <h1>My Models</h1>
-        <button id="addModelBtn" class="btn btn-primary">Add New Model</button>
     </div>
 
+    {% if models %}
+    <!-- ===== LIST OF USER MODELS ======================================= -->
     <div class="models-list">
-        {% if models %}
-            {% for model in models %}
-            <div class="model-card">
-                <div class="model-header">
-                    <div class="model-icon" style="background-color: {{ model.color }}">
-                        {{ model.name[:2] }}
-                    </div>
-                    <div class="model-info">
-                        <h3>{{ model.name }}</h3>
-                        <p>{{ model.provider }}</p>
-                    </div>
+        {% for model in models %}
+        <div class="model-card">
+            <div class="model-header">
+                <div class="model-icon" style="background-color: {{ model.color }}">
+                    {{ model.name[:2] }}
                 </div>
-
-                <div class="model-details">
-                    {% if model.description %}
-                    <p class="model-description">{{ model.description }}</p>
-                    {% endif %}
-
-                    {% if model.api_url %}
-                    <div class="model-endpoint">
-                        <span class="label">API Endpoint:</span>
-                        <span class="value">{{ model.api_url }}</span>
-                    </div>
-                    {% endif %}
+                <div class="model-info">
+                    <h3>{{ model.name }}</h3>
+                    <p>{{ model.provider }}</p>
                 </div>
+            </div>
+            <div class="model-details">
+                <p class="model-description">{{ model.description or "No description provided." }}</p>
 
-                <div class="model-actions">
-                    <button class="btn btn-secondary test-model-btn" data-id="{{ model.id }}"
-                            data-url="{{ model.api_url }}" data-key="{{ model.api_key }}">
-                        Test Connection
+                {% if model.api_url %}
+                <div class="model-endpoint">
+                    <span class="label">API Endpoint:</span>
+                    <span class="value">{{ model.api_url }}</span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="model-actions">
+                <button class="btn btn-secondary test-model-btn"
+                        data-id="{{ model.id }}"
+                        data-url="{{ model.api_url }}"
+                        data-key="{{ model.api_key }}">
+                    <i class="fas fa-vial"></i> Test Connection
+                </button>
+                <form action="{{ url_for('user.delete_model', model_id=model.id) }}" method="post" onsubmit="return confirm('Are you sure you want to delete this model?');">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i> Delete
                     </button>
-                    <form action="{{ url_for('user.delete_model', model_id=model.id) }}" method="POST"
-                          onsubmit="return confirm('Are you sure you want to delete this model?');">
-                        <button type="submit" class="btn btn-danger">Delete</button>
-                    </form>
-                </div>
+                </form>
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="empty-models">
-                <p>You haven't added any custom models yet.</p>
-                <p>Click "Add New Model" to get started.</p>
-            </div>
-        {% endif %}
+        </div>
+        {% endfor %}
     </div>
 
-    <!-- Add Model Modal -->
-    <div id="addModelModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Add New Model</h2>
+    <!-- ===== ADD‑NEW BUTTON WHEN MODELS EXIST =========================== -->
+    <div class="models-footer" style="margin-top:32px; text-align:center;">
+        <button id="addModelBtn" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Model
+        </button>
+    </div>
 
-            <form method="POST" action="{{ url_for('user.add_model') }}">
+    {% else %}
+    <!-- ===== EMPTY STATE =============================================== -->
+    <div class="empty-models">
+        <i class="fas fa-robot fa-4x"></i>
+        <h3>No Custom Models Yet</h3>
+        <p>Add your own LLM models to include them in benchmarks</p>
+        <button id="addModelBtn" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Your First Model
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ================ ADD MODEL MODAL ==================================== -->
+<div id="addModelModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Add Custom Model</h2>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="addModelForm" method="POST" action="{{ url_for('user.add_model') }}">
                 {{ form.hidden_tag() }}
 
-                <div class="form-group">
-                    {{ form.name.label }}
-                    {{ form.name(class="form-control") }}
-                </div>
-
-                <div class="form-group">
-                    {{ form.provider.label }}
-                    {{ form.provider(class="form-control") }}
+                <div class="form-row">
+                    <div class="form-group form-group-large">
+                        {{ form.name.label }}
+                        {{ form.name(class="form-control", placeholder="e.g., My Custom GPT") }}
+                    </div>
+                    <div class="form-group form-group-medium">
+                        {{ form.provider.label }}
+                        {{ form.provider(class="form-control", placeholder="e.g., My Company") }}
+                    </div>
                 </div>
 
                 <div class="form-group">
                     {{ form.description.label }}
-                    {{ form.description(class="form-control") }}
+                    {{ form.description(class="form-control", placeholder="Brief description of this model", rows=2) }}
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group form-group-large">
+                        <div class="form-label-help">
+                            {{ form.api_url.label }}
+                            <span class="tooltip-icon" data-tooltip="The URL endpoint for API calls">?</span>
+                        </div>
+                        {{ form.api_url(class="form-control", placeholder="https://api.example.com/v1") }}
+                    </div>
+                    <div class="form-group form-group-small">
+                        <div class="form-label-help">
+                            {{ form.color.label }}
+                            <span class="tooltip-icon" data-tooltip="Color for model display">?</span>
+                        </div>
+                        <div class="color-picker-container">
+                            <div class="color-preview" id="colorPreview"></div>
+                            {{ form.color(class="form-control color-picker", value="#808080") }}
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    {{ form.api_url.label }}
-                    {{ form.api_url(class="form-control") }}
-                    <small class="form-text text-muted">Optional: Enter if you want to test API connection</small>
+                    <div class="form-label-help">
+                        {{ form.api_key.label }}
+                        <span class="tooltip-icon" data-tooltip="Your API key (stored securely)">?</span>
+                    </div>
+                    {{ form.api_key(class="form-control", placeholder="sk-...", type="password") }}
+                    <div class="api-key-toggle">
+                        <input type="checkbox" id="showApiKey"> Show API key
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    {{ form.api_key.label }}
-                    {{ form.api_key(class="form-control") }}
-                    <small class="form-text text-muted">Optional: Required only if your API needs authentication</small>
-                </div>
-
-                <div class="form-group">
-                    {{ form.color.label }}
-                    {{ form.color(class="form-control color-picker") }}
-                    <small class="form-text text-muted">Optional: Choose a color for your model (e.g. #FF5733)</small>
-                </div>
-
-                <div class="test-result" id="testResult" style="display: none;">
-                    <div class="test-message"></div>
+                <!-- Test Connection Results -->
+                <div class="test-result" id="testResult">
+                    <div class="test-status">
+                        <div class="test-indicator"><i class="fas fa-spinner fa-spin"></i></div>
+                        <div class="test-message">Testing connection...</div>
+                    </div>
                     <pre class="test-details"></pre>
                 </div>
 
                 <div class="form-actions">
-                    <button type="button" id="testConnectionBtn" class="btn btn-secondary">Test Connection</button>
+                    <button type="button" id="testConnectionBtn" class="btn btn-secondary">
+                        <i class="fas fa-vial"></i> Test Connection
+                    </button>
                     {{ form.submit(class="btn btn-primary") }}
                 </div>
             </form>
@@ -111,96 +146,115 @@
 </div>
 {% endblock %}
 
+{% block additional_styles %}
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Modal functionality
+        // Elements
         const modal = document.getElementById('addModelModal');
-        const btn = document.getElementById('addModelBtn');
-        const span = document.getElementsByClassName('close')[0];
-
-        btn.onclick = function() {
-            modal.style.display = 'block';
-        }
-
-        span.onclick = function() {
-            modal.style.display = 'none';
-        }
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        // Test connection in modal
-        const testBtn = document.getElementById('testConnectionBtn');
-        const apiUrlInput = document.getElementById('api_url');
+        const closeBtn = modal.querySelector('.close');
+        const addModelBtn = document.getElementById('addModelBtn');
+        const colorInput = document.getElementById('color');
+        const colorPreview = document.getElementById('colorPreview');
         const apiKeyInput = document.getElementById('api_key');
+        const showApiKeyCheckbox = document.getElementById('showApiKey');
+        const testConnectionBtn = document.getElementById('testConnectionBtn');
         const testResult = document.getElementById('testResult');
-        const testMessage = document.querySelector('.test-message');
-        const testDetails = document.querySelector('.test-details');
 
-        testBtn.addEventListener('click', function() {
-            const apiUrl = apiUrlInput.value.trim();
-            const apiKey = apiKeyInput.value.trim();
+        // --- modal helpers ---------------------------------------------
+        function openModal() {
+            modal.style.display = 'block';
+            document.body.classList.add('modal-open');
+        }
+        function closeModal() {
+            modal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            document.getElementById('addModelForm').reset();
+            testResult.style.display = 'none';
+        }
 
-            if (!apiUrl) {
-                testResult.style.display = 'block';
-                testMessage.textContent = 'API URL is required for testing';
-                testMessage.className = 'test-message error';
-                return;
+        // Open modal
+        if (addModelBtn) {
+            addModelBtn.addEventListener('click', openModal);
+        }
+
+        // Close modal
+        closeBtn.addEventListener('click', closeModal);
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                closeModal();
             }
-
-            testBtn.disabled = true;
-            testBtn.textContent = 'Testing...';
-            testResult.style.display = 'block';
-            testMessage.textContent = 'Testing connection...';
-            testMessage.className = 'test-message testing';
-
-            fetch('/user/models/test', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    api_url: apiUrl,
-                    api_key: apiKey
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                testBtn.disabled = false;
-                testBtn.textContent = 'Test Connection';
-
-                if (data.success) {
-                    testMessage.textContent = data.message;
-                    testMessage.className = 'test-message success';
-
-                    if (data.response) {
-                        testDetails.textContent = JSON.stringify(data.response, null, 2);
-                        testDetails.style.display = 'block';
-                    } else {
-                        testDetails.style.display = 'none';
-                    }
-                } else {
-                    testMessage.textContent = data.message;
-                    testMessage.className = 'test-message error';
-                    testDetails.style.display = 'none';
-                }
-            })
-            .catch(error => {
-                testBtn.disabled = false;
-                testBtn.textContent = 'Test Connection';
-                testMessage.textContent = 'Error testing connection: ' + error.message;
-                testMessage.className = 'test-message error';
-                testDetails.style.display = 'none';
-            });
         });
 
-        // Test connection for existing models
+        // Color preview
+        if (colorInput) {
+            colorPreview.style.backgroundColor = colorInput.value || '#808080';
+            colorInput.addEventListener('input', function() {
+                colorPreview.style.backgroundColor = this.value;
+            });
+        }
+
+        // API key toggle
+        if (showApiKeyCheckbox && apiKeyInput) {
+            showApiKeyCheckbox.addEventListener('change', function() {
+                apiKeyInput.type = this.checked ? 'text' : 'password';
+            });
+        }
+
+        // Test connection button
+        if (testConnectionBtn) {
+            testConnectionBtn.addEventListener('click', function() {
+                const apiUrl = document.getElementById('api_url').value;
+                const apiKey = document.getElementById('api_key').value;
+
+                if (!apiUrl) {
+                    alert('API URL is required for testing connection');
+                    return;
+                }
+
+                // Show testing state
+                testResult.style.display = 'block';
+                testResult.className = 'test-result testing';
+                testResult.querySelector('.test-indicator').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                testResult.querySelector('.test-message').textContent = 'Testing connection...';
+                testResult.querySelector('.test-details').textContent = '';
+
+                // Fetch to backend
+                fetch('/user/models/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ api_url: apiUrl, api_key: apiKey }),
+                })
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data.success) {
+                        testResult.className = 'test-result success';
+                        testResult.querySelector('.test-indicator').innerHTML = '<i class="fas fa-check-circle"></i>';
+                    } else {
+                        testResult.className = 'test-result error';
+                        testResult.querySelector('.test-indicator').innerHTML = '<i class="fas fa-times-circle"></i>';
+                    }
+                    testResult.querySelector('.test-message').textContent = data.message;
+                    if (data.response) {
+                        testResult.querySelector('.test-details').textContent = JSON.stringify(data.response, null, 2);
+                    }
+                })
+                .catch(err => {
+                    testResult.className = 'test-result error';
+                    testResult.querySelector('.test-indicator').innerHTML = '<i class="fas fa-times-circle"></i>';
+                    testResult.querySelector('.test-message').textContent = 'Error testing connection: ' + err.message;
+                });
+            });
+        }
+
+        // Test buttons on existing models --------------------------------
         document.querySelectorAll('.test-model-btn').forEach(button => {
             button.addEventListener('click', function() {
+                const modelId = this.getAttribute('data-id');
                 const apiUrl = this.getAttribute('data-url');
                 const apiKey = this.getAttribute('data-key');
 
@@ -209,34 +263,47 @@
                     return;
                 }
 
-                this.disabled = true;
-                this.textContent = 'Testing...';
+                const notification = document.createElement('div');
+                notification.className = 'notification';
+                notification.innerHTML = `
+                    <div class="notification-header">
+                        <strong>Testing connection...</strong>
+                        <button class="notification-close">&times;</button>
+                    </div>
+                    <div class="notification-body" id="test-notification-${modelId}">Connecting to API endpoint...</div>`;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.classList.add('show'), 10);
+                notification.querySelector('.notification-close').addEventListener('click', () => {
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 300);
+                });
 
                 fetch('/user/models/test', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        api_url: apiUrl,
-                        api_key: apiKey
-                    }),
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ api_url: apiUrl, api_key: apiKey }),
                 })
-                .then(response => response.json())
+                .then(resp => resp.json())
                 .then(data => {
-                    this.disabled = false;
-                    this.textContent = 'Test Connection';
-
+                    const body = document.getElementById(`test-notification-${modelId}`);
                     if (data.success) {
-                        alert('Connection successful: ' + data.message);
+                        notification.classList.add('success');
+                        notification.querySelector('.notification-header').innerHTML = `<strong>Connection Successful</strong><button class="notification-close">&times;</button>`;
+                        body.textContent = data.message;
                     } else {
-                        alert('Connection failed: ' + data.message);
+                        notification.classList.add('error');
+                        notification.querySelector('.notification-header').innerHTML = `<strong>Connection Failed</strong><button class="notification-close">&times;</button>`;
+                        body.textContent = data.message;
                     }
+                    setTimeout(() => {
+                        notification.classList.remove('show');
+                        setTimeout(() => notification.remove(), 300);
+                    }, 5000);
                 })
-                .catch(error => {
-                    this.disabled = false;
-                    this.textContent = 'Test Connection';
-                    alert('Error testing connection: ' + error.message);
+                .catch(err => {
+                    notification.classList.add('error');
+                    notification.querySelector('.notification-header').innerHTML = `<strong>Connection Error</strong><button class="notification-close">&times;</button>`;
+                    document.getElementById(`test-notification-${modelId}`).textContent = 'Error: ' + err.message;
                 });
             });
         });

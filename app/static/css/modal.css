@@ -1,0 +1,257 @@
+/* app/static/css/modal.css */
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.3s;
+  backdrop-filter: blur(3px);
+}
+
+.modal-open {
+  overflow: hidden;
+}
+
+.modal-content {
+  background-color: var(--card-bg);
+  margin: 5% auto;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 700px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  animation: slideDown 0.4s;
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8fafc;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.close {
+  color: var(--text-secondary);
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close:hover {
+  color: var(--text-primary);
+}
+
+/* Form Styles for Modal */
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-group-large {
+  flex: 2;
+}
+
+.form-group-medium {
+  flex: 1.5;
+}
+
+.form-group-small {
+  flex: 1;
+}
+
+.form-label-help {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background-color: #e5e7eb;
+  color: #4b5563;
+  border-radius: 50%;
+  font-size: 12px;
+  cursor: help;
+  position: relative;
+}
+
+.tooltip-icon:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1f2937;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 10;
+  margin-bottom: 5px;
+}
+
+.tooltip-icon:hover::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #1f2937 transparent;
+  margin-bottom: 0;
+}
+
+.color-picker-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-preview {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
+.color-picker {
+  height: 40px;
+  padding: 4px 8px;
+  width: calc(100% - 42px);
+}
+
+.api-key-toggle {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.api-key-toggle input {
+  margin-right: 6px;
+}
+
+/* Test Connection Styles */
+.test-result {
+  margin: 24px 0;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  display: none;
+}
+
+.test-result.success {
+  border-color: #10b981;
+  background-color: #ecfdf5;
+  display: block;
+}
+
+.test-result.error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+  display: block;
+}
+
+.test-result.testing {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+  display: block;
+}
+
+.test-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.test-indicator {
+  font-size: 20px;
+}
+
+.test-result.success .test-indicator {
+  color: #10b981;
+}
+
+.test-result.error .test-indicator {
+  color: #ef4444;
+}
+
+.test-result.testing .test-indicator {
+  color: #3b82f6;
+}
+
+.test-message {
+  font-weight: 500;
+  flex: 1;
+}
+
+.test-details {
+  background-color: #fff;
+  padding: 12px;
+  border-radius: 6px;
+  overflow: auto;
+  max-height: 200px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 30px;
+}
+
+.form-actions button {
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 10% auto;
+  }
+}

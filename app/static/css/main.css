@@ -1,0 +1,13 @@
+/* app/static/css/main.css */
+/* Main stylesheet that imports all other CSS files */
+@import 'base.css';
+@import 'models.css';
+@import 'benchmarks.css';
+@import 'metrics.css';
+@import 'results.css';
+@import 'blind-test.css';
+@import 'auth.css';
+@import 'user-models.css';
+@import 'modal.css';
+@import 'notifications.css';
+@import 'animations.css';
