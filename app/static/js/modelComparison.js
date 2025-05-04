@@ -1,6 +1,10 @@
 // app/static/js/modelComparison.js
 let availableModels = [];
 let selectedModels = [];
+let modelCategories = {
+    'standard': 'Standard Models',
+    'custom': 'My Custom Models'
+};
 
 function initModelComparison() {
     // Fetch available models from API (now including user models)
@@ -19,7 +23,37 @@ function renderModels() {
     const modelsGrid = document.getElementById('modelsGrid');
     modelsGrid.innerHTML = '';
 
-    availableModels.forEach(model => {
+    // Group models by type (standard vs custom)
+    const standardModels = availableModels.filter(model => model.type !== 'custom');
+    const customModels = availableModels.filter(model => model.type === 'custom');
+
+    // Create section for standard models
+    if (standardModels.length > 0) {
+        createModelSection('standard', standardModels, modelsGrid);
+    }
+
+    // Create section for custom models
+    if (customModels.length > 0) {
+        createModelSection('custom', customModels, modelsGrid);
+    }
+
+    updateSelectedModelsList();
+}
+
+function createModelSection(categoryKey, models, container) {
+    // Create section header
+    const sectionHeader = document.createElement('div');
+    sectionHeader.className = 'model-section-header';
+    sectionHeader.innerHTML = `<h3>${modelCategories[categoryKey]}</h3>`;
+    container.appendChild(sectionHeader);
+
+    // Create grid for this category
+    const categoryGrid = document.createElement('div');
+    categoryGrid.className = 'models-category-grid';
+    container.appendChild(categoryGrid);
+
+    // Add models to grid
+    models.forEach(model => {
         const isSelected = selectedModels.some(m => m.id === model.id);
         const modelCard = document.createElement('div');
         modelCard.className = `model-card ${isSelected ? 'selected' : ''}`;
@@ -46,10 +80,8 @@ function renderModels() {
         `;
 
         modelCard.addEventListener('click', () => toggleModelSelection(model));
-        modelsGrid.appendChild(modelCard);
+        categoryGrid.appendChild(modelCard);
     });
-
-    updateSelectedModelsList();
 }
 
 function toggleModelSelection(model) {
@@ -97,4 +129,36 @@ function updateSelectedModelsList() {
 
 function getSelectedModels() {
     return selectedModels.map(model => model.id);
+}
+
+// Добавить следующую функцию
+function hasApiAccess(model) {
+    return (model.type === 'api' || (model.type === 'custom' && model.api_url));
+}
+
+// Функция для проверки совместимости моделей с бенчмарками
+function checkModelBenchmarkCompatibility(models, benchmarks) {
+    // ---- BLIND TEST ------------------------------------------------------
+    if (benchmarks.includes('blind_test')) {
+        // 1 ⟶ нельзя совмещать с другими бенчмарками
+        if (benchmarks.length > 1) {
+            return {
+                compatible: false,
+                message: 'Blind Test cannot be combined with other benchmarks'
+            };
+        }
+        // 2 ⟶ должно быть ровно две модели и обе с API
+        if (models.length !== 2 || !models.every(hasApiAccess)) {
+            return {
+                compatible: false,
+                message: 'Select exactly two models that have API access for Blind Test'
+            };
+        }
+    }
+
+    // ---- Обычные бенчмарки ------------------------------------------------
+    // нет дополнительных ограничений
+    return {
+        compatible: true
+    };
 }

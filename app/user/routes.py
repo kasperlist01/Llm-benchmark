@@ -55,7 +55,7 @@ def add_model():
     """Add a new custom model"""
     form = AddModelForm()
     if form.validate_on_submit():
-        # If test button was clicked, test the connection first
+        # Если была нажата кнопка тестирования, сначала проверяем соединение
         if 'test' in request.form:
             if form.api_url.data:
                 result = test_model_connection(form.api_url.data, form.api_key.data)
@@ -68,21 +68,27 @@ def add_model():
                 flash('API URL is required for testing connection', 'danger')
                 return redirect(url_for('user.models'))
 
-        # Create new model
-        model = UserModel(
-            name=form.name.data,
-            provider=form.provider.data,
-            description=form.description.data,
-            api_url=form.api_url.data,
-            api_key=form.api_key.data,
-            color=form.color.data or "#808080",
-            user_id=current_user.id
-        )
-        db.session.add(model)
-        db.session.commit()
-        flash('Model added successfully!', 'success')
+        try:
+            # Создаем новую модель
+            model = UserModel(
+                name=form.name.data,
+                provider=form.provider.data,
+                description=form.description.data,
+                api_url=form.api_url.data,
+                api_key=form.api_key.data,
+                color=form.color.data or "#808080",
+                user_id=current_user.id
+            )
+            db.session.add(model)
+            db.session.commit()
+            flash('Model added successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error adding model: {str(e)}', 'danger')
+
         return redirect(url_for('user.models'))
 
+    # Если форма не прошла валидацию, показываем ошибки
     for field, errors in form.errors.items():
         for error in errors:
             flash(f"{getattr(form, field).label.text}: {error}", 'danger')
@@ -96,14 +102,19 @@ def delete_model(model_id):
     """Delete a custom model"""
     model = UserModel.query.get_or_404(model_id)
 
-    # Check if the model belongs to the current user
+    # Проверяем, принадлежит ли модель текущему пользователю
     if model.user_id != current_user.id:
         flash('You do not have permission to delete this model', 'danger')
         return redirect(url_for('user.models'))
 
-    db.session.delete(model)
-    db.session.commit()
-    flash('Model deleted successfully', 'success')
+    try:
+        db.session.delete(model)
+        db.session.commit()
+        flash('Model deleted successfully', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting model: {str(e)}', 'danger')
+
     return redirect(url_for('user.models'))
 
 

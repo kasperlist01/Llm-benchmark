@@ -1,0 +1,54 @@
+/* app/static/css/auth.css */
+/* Auth styles */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  padding: 20px;
+}
+
+.auth-form {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 32px;
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 480px;
+}
+
+.auth-form h1 {
+  margin-top: 0;
+  margin-bottom: 24px;
+  font-size: 24px;
+  text-align: center;
+}
+
+.form-check {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.form-check-input {
+  margin-right: 8px;
+}
+
+.border-top {
+  border-top: 1px solid var(--border-color);
+  margin-top: 20px;
+  padding-top: 20px;
+  text-align: center;
+}
+
+.error-message {
+  color: var(--danger-color);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+@media (max-width: 600px) {
+  .auth-form {
+    padding: 24px;
+  }
+}

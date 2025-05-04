@@ -55,13 +55,31 @@
 
         // Run benchmark button event listener
         document.getElementById('runBenchmarkBtn').addEventListener('click', function() {
-            const selectedModels = getSelectedModels();
+            const selectedModelIds = getSelectedModels();
             const selectedBenchmarks = getSelectedBenchmarks();
             const metrics = getMetricsConfiguration();
 
-            if (selectedModels.length === 0 || selectedBenchmarks.length === 0) {
+            if (selectedModelIds.length === 0 || selectedBenchmarks.length === 0) {
                 alert('Please select at least one model and one benchmark');
                 return;
+            }
+
+            // Get full model objects for compatibility check
+            const selectedModels = selectedModelIds.map(id => {
+                return availableModels.find(m => m.id === id);
+            });
+
+            // Check compatibility
+            const compatibility = checkModelBenchmarkCompatibility(selectedModels, selectedBenchmarks);
+            if (!compatibility.compatible) {
+                alert(compatibility.message);
+                return;
+            }
+
+            // Если пользователь выбрал blind_test, автоматически убираем все остальные
+            let benchmarksToSend = selectedBenchmarks;
+            if (selectedBenchmarks.includes('blind_test') && selectedBenchmarks.length > 1) {
+                benchmarksToSend = ['blind_test'];
             }
 
             // Show loading state
@@ -74,20 +92,28 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    selectedModels,
-                    selectedBenchmarks,
+                    selectedModels: selectedModelIds,
+                    selectedBenchmarks: benchmarksToSend,
                     metrics
                 }),
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(results => {
+                if (results.error) {
+                    throw new Error(results.error);
+                }
                 // Render results visualization
                 renderResultsVisualization(results, metrics);
             })
             .catch(error => {
                 console.error('Error running benchmark:', error);
                 document.getElementById('resultsContainer').innerHTML =
-                    '<div class="error">Error running benchmark. Please try again.</div>';
+                    `<div class="error">Error running benchmark: ${error.message}</div>`;
             });
         });
     });
