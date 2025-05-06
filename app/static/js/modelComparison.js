@@ -2,8 +2,8 @@
 let availableModels = [];
 let selectedModels = [];
 let modelCategories = {
-    'standard': 'Standard Models',
-    'custom': 'My Custom Models'
+    'standard': 'Стандартные модели',
+    'custom': 'Мои пользовательские модели'
 };
 
 function initModelComparison() {
@@ -15,7 +15,7 @@ function initModelComparison() {
             renderModels();
         })
         .catch(error => {
-            console.error('Error fetching models:', error);
+            console.error('Ошибка при получении моделей:', error);
         });
 }
 
@@ -63,17 +63,20 @@ function createModelSection(categoryKey, models, container) {
             modelCard.classList.add('custom-model');
         }
 
+        // Создаем инициалы из первых двух букв имени модели
+        const initials = model.name.substring(0, 2).toUpperCase();
+
         modelCard.innerHTML = `
-            <div class="model-icon" style="background-color: ${model.color}">
-                ${model.name.substring(0, 2)}
+            <div class="model-icon" style="background-color: ${model.color || '#808080'}">
+                ${initials}
             </div>
             <div class="model-info">
-                <h3>${model.name}</h3>
-                <p>${model.provider}</p>
+                <h3 title="${model.name}">${model.name}</h3>
+                <p title="${model.provider || ''}">${model.provider || ''}</p>
                 <div class="model-tags">
                     ${model.type === 'api' ? '<span class="tag api-tag">API</span>' : ''}
-                    ${model.type === 'open' ? '<span class="tag open-tag">Open Source</span>' : ''}
-                    ${model.type === 'custom' ? '<span class="tag custom-tag">Custom</span>' : ''}
+                    ${model.type === 'open' ? '<span class="tag open-tag">Открытая</span>' : ''}
+                    ${model.type === 'custom' ? '<span class="tag custom-tag">Пользовательская</span>' : ''}
                     ${model.size ? `<span class="tag size-tag">${model.size}</span>` : ''}
                 </div>
             </div>
@@ -92,6 +95,13 @@ function toggleModelSelection(model) {
         selectedModels.splice(index, 1);
     }
 
+    // Обновляем список совместимых бенчмарков при изменении выбранных моделей
+    if (typeof filterCompatibleBenchmarks === 'function') {
+        filterCompatibleBenchmarks();
+        renderBenchmarkCategories();
+        renderBenchmarks();
+    }
+
     renderModels();
 }
 
@@ -105,7 +115,7 @@ function updateSelectedModelsList() {
     if (selectedModels.length === 0) {
         const emptyMessage = document.createElement('p');
         emptyMessage.className = 'empty-selection';
-        emptyMessage.textContent = 'No models selected';
+        emptyMessage.textContent = 'Модели не выбраны';
         selectedModelsList.appendChild(emptyMessage);
         return;
     }
@@ -138,26 +148,65 @@ function hasApiAccess(model) {
 
 // Функция для проверки совместимости моделей с бенчмарками
 function checkModelBenchmarkCompatibility(models, benchmarks) {
-    // ---- BLIND TEST ------------------------------------------------------
-    if (benchmarks.includes('blind_test')) {
-        // 1 ⟶ нельзя совмещать с другими бенчмарками
-        if (benchmarks.length > 1) {
+    // Проверяем, есть ли среди выбранных хотя бы одна стандартная и одна пользовательская модель
+    const hasStandardModels = models.some(model => model.type !== 'custom');
+    const hasCustomModels = models.some(model => model.type === 'custom');
+
+    // Проверяем, есть ли среди выбранных бенчмарков несовместимые с типами моделей
+    if (hasStandardModels && !hasCustomModels) {
+        // Если только стандартные модели, но выбраны бенчмарки для пользовательских
+        const hasCustomBenchmarks = benchmarks.some(benchId => {
+            const bench = allBenchmarks.find(b => b.id === benchId);
+            return bench && bench.model_type === 'custom';
+        });
+
+        if (hasCustomBenchmarks) {
             return {
                 compatible: false,
-                message: 'Blind Test cannot be combined with other benchmarks'
+                message: 'Выбранные бенчмарки совместимы только с пользовательскими моделями'
             };
         }
-        // 2 ⟶ должно быть ровно две модели и обе с API
-        if (models.length !== 2 || !models.every(hasApiAccess)) {
+    } else if (!hasStandardModels && hasCustomModels) {
+        // Если только пользовательские модели, но выбраны бенчмарки для стандартных
+        const hasStandardBenchmarks = benchmarks.some(benchId => {
+            const bench = allBenchmarks.find(b => b.id === benchId);
+            return bench && bench.model_type === 'standard';
+        });
+
+        if (hasStandardBenchmarks) {
             return {
                 compatible: false,
-                message: 'Select exactly two models that have API access for Blind Test'
+                message: 'Выбранные бенчмарки совместимы только со стандартными моделями'
             };
         }
     }
 
-    // ---- Обычные бенчмарки ------------------------------------------------
-    // нет дополнительных ограничений
+    // ---- SPECIAL TESTS ------------------------------------------------------
+    // Check for blind test or GPT-4o evaluation
+    const hasBlindTest = benchmarks.includes('blind_test');
+    const hasGpt4oEval = benchmarks.includes('gpt4o_eval');
+
+    if (hasBlindTest || hasGpt4oEval) {
+        const specialTest = hasBlindTest ? 'Слепой тест' : 'GPT-4o Evaluation';
+
+        // 1 ⟶ нельзя совмещать с другими бенчмарками
+        if (benchmarks.length > 1) {
+            return {
+                compatible: false,
+                message: `${specialTest} нельзя комбинировать с другими бенчмарками`
+            };
+        }
+
+        // 2 ⟶ должно быть минимум две модели с API доступом
+        const apiModels = models.filter(hasApiAccess);
+        if (apiModels.length < 2) {
+            return {
+                compatible: false,
+                message: `Выберите как минимум две модели с доступом к API для ${specialTest}`
+            };
+        }
+    }
+
     return {
         compatible: true
     };

@@ -26,7 +26,7 @@ class UserModel(db.Model):
             'type': 'custom',
             'description': self.description,
             'api_url': self.api_url,
-            'api_key': self.api_key,  # Обычно API ключи не следует включать в словарь, но здесь он нужен для тестирования соединения
+            'api_key': self.api_key,
             'size': None,
             'color': self.color
         }

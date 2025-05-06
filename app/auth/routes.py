@@ -17,7 +17,7 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password', 'danger')
+            flash('Неверное имя пользователя или пароль', 'danger')
             return redirect(url_for('auth.login'))
 
         login_user(user, remember=form.remember_me.data)
@@ -26,7 +26,7 @@ def login():
             next_page = url_for('main.index')
         return redirect(next_page)
 
-    return render_template('auth/login.html', title='Sign In', form=form)
+    return render_template('auth/login.html', title='Вход', form=form)
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
@@ -40,10 +40,10 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash('Your account has been created! You can now log in.', 'success')
+        flash('Ваша учетная запись создана! Теперь вы можете войти.', 'success')
         return redirect(url_for('auth.login'))
 
-    return render_template('auth/register.html', title='Register', form=form)
+    return render_template('auth/register.html', title='Регистрация', form=form)
 
 
 @auth_bp.route('/logout')
