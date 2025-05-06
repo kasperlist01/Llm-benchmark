@@ -1,0 +1,804 @@
+{
+  "top_models": [
+    {
+      "name": "Qwen2.5-72B-2x-Instruct-TIES-v1.0",
+      "provider": "BenevolenceMessiah",
+      "average_score": 42.27,
+      "params_billions": 72.7,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Qwen2.5-32B-Inst-BaseMerge-TIES",
+      "provider": "CultriX",
+      "average_score": 45.66,
+      "params_billions": 32.76,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "PathFinderAi3.0",
+      "provider": "Daemontatox",
+      "average_score": 40.46,
+      "params_billions": 32.76,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "BBAIIFEV1",
+      "provider": "Amaorynho",
+      "average_score": 30.58,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "Llama-3.3-70B-CogniLink",
+      "provider": "Daemontatox",
+      "average_score": 42.77,
+      "params_billions": 70.55,
+      "architecture": "LlamaForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "QwenStock-14B",
+      "provider": "Aashraf995",
+      "average_score": 37.13,
+      "params_billions": 14.77,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "Infinity-Instruct-7M-Gen-Llama3_1-70B",
+      "provider": "BAAI",
+      "average_score": 37.48,
+      "params_billions": 70.55,
+      "architecture": "LlamaForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "c4ai-command-r-plus-08-2024",
+      "provider": "CohereForAI",
+      "average_score": 33.65,
+      "params_billions": 103.81,
+      "architecture": "CohereForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Yi-1.5-34B-Chat",
+      "provider": "01-ai",
+      "average_score": 33.36,
+      "params_billions": 34.39,
+      "architecture": "LlamaForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "QwentileSwap",
+      "provider": "Aryanne",
+      "average_score": 43.92,
+      "params_billions": 32.76,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "Qwen2.5-14B-Hindi",
+      "provider": "1-800-LLMs",
+      "average_score": 36.27,
+      "params_billions": 14.77,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Yi-1.5-34B-32K",
+      "provider": "01-ai",
+      "average_score": 26.73,
+      "params_billions": 34.39,
+      "architecture": "LlamaForCausalLM",
+      "type": "Pretrained"
+    },
+    {
+      "name": "Josiefied-abliteratedV4-Qwen2.5-14B-Inst-BaseMerge-TIES",
+      "provider": "CombinHorizon",
+      "average_score": 41.77,
+      "params_billions": 14.77,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "Sphinx2.0",
+      "provider": "Daemontatox",
+      "average_score": 37.69,
+      "params_billions": 14.77,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Gemma-Evo-10B",
+      "provider": "Aashraf995",
+      "average_score": 34.33,
+      "params_billions": 10.16,
+      "architecture": "Gemma2ForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "Yi-1.5-34B",
+      "provider": "01-ai",
+      "average_score": 25.65,
+      "params_billions": 34.39,
+      "architecture": "LlamaForCausalLM",
+      "type": "Pretrained"
+    },
+    {
+      "name": "LeTriomphant2.2_ECE_iLAB",
+      "provider": "Baptiste-HUVELLE-10",
+      "average_score": 41.30,
+      "params_billions": 72.71,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "blossom-v5.1-34b",
+      "provider": "Azure99",
+      "average_score": 30.30,
+      "params_billions": 34.39,
+      "architecture": "LlamaForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "YiSM-blossom5.1-34B-SLERP",
+      "provider": "CombinHorizon",
+      "average_score": 31.38,
+      "params_billions": 34.39,
+      "architecture": "LlamaForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "Qwen2.5-7B-test-novelist",
+      "provider": "Alsebay",
+      "average_score": 27.17,
+      "params_billions": 7.62,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Qwen-Evo-7B",
+      "provider": "Aashraf995",
+      "average_score": 30.28,
+      "params_billions": 7.62,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "c4ai-command-r-v01",
+      "provider": "CohereForAI",
+      "average_score": 25.93,
+      "params_billions": 34.98,
+      "architecture": "CohereForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Yi-1.5-9B-Chat",
+      "provider": "01-ai",
+      "average_score": 29.53,
+      "params_billions": 8.83,
+      "architecture": "LlamaForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Infinity-Instruct-3M-0625-Yi-1.5-9B",
+      "provider": "BAAI",
+      "average_score": 28.14,
+      "params_billions": 8.83,
+      "architecture": "LlamaForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Yi-1.5-9B",
+      "provider": "01-ai",
+      "average_score": 22.15,
+      "params_billions": 8.83,
+      "architecture": "LlamaForCausalLM",
+      "type": "Pretrained"
+    },
+    {
+      "name": "c4ai-command-r-plus",
+      "provider": "CohereForAI",
+      "average_score": 30.94,
+      "params_billions": 103.81,
+      "architecture": "CohereForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "aya-expanse-32b",
+      "provider": "CohereForAI",
+      "average_score": 29.72,
+      "params_billions": 32.30,
+      "architecture": "CohereForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Blossom-V6-14B",
+      "provider": "Azure99",
+      "average_score": 32.81,
+      "params_billions": 14.77,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Blossom-V6-7B",
+      "provider": "Azure99",
+      "average_score": 31.05,
+      "params_billions": 7.62,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "blossom-v5-32b",
+      "provider": "Azure99",
+      "average_score": 27.72,
+      "params_billions": 32.51,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Yi-1.5-6B-Chat",
+      "provider": "01-ai",
+      "average_score": 22.78,
+      "params_billions": 6.06,
+      "architecture": "LlamaForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Yi-1.5-6B",
+      "provider": "01-ai",
+      "average_score": 16.75,
+      "params_billions": 6.06,
+      "architecture": "LlamaForCausalLM",
+      "type": "Pretrained"
+    },
+    {
+      "name": "Infinity-Instruct-3M-0625-Qwen2-7B",
+      "provider": "BAAI",
+      "average_score": 26.20,
+      "params_billions": 7.62,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Creative-7B-nerd",
+      "provider": "Aashraf995",
+      "average_score": 29.98,
+      "params_billions": 7.62,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "Infinity-Instruct-3M-0625-Llama3-70B",
+      "provider": "BAAI",
+      "average_score": 36.91,
+      "params_billions": 70.55,
+      "architecture": "LlamaForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "SuperHeart",
+      "provider": "Aryanne",
+      "average_score": 25.56,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "Infinity-Instruct-3M-0613-Llama3-70B",
+      "provider": "BAAI",
+      "average_score": 35.58,
+      "params_billions": 70.55,
+      "architecture": "LlamaForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Yi-34B-Chat",
+      "provider": "01-ai",
+      "average_score": 24.23,
+      "params_billions": 34.39,
+      "architecture": "LlamaForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Infinity-Instruct-7M-0729-Llama3_1-8B",
+      "provider": "BAAI",
+      "average_score": 23.45,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Yi-34B",
+      "provider": "01-ai",
+      "average_score": 22.37,
+      "params_billions": 34.39,
+      "architecture": "LlamaForCausalLM",
+      "type": "Pretrained"
+    },
+    {
+      "name": "final_model_test_v2",
+      "provider": "4season",
+      "average_score": 23.09,
+      "params_billions": 21.42,
+      "architecture": "LlamaForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "aya-expanse-8b",
+      "provider": "CohereForAI",
+      "average_score": 22.41,
+      "params_billions": 8.03,
+      "architecture": "CohereForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Infinity-Instruct-7M-0729-mistral-7B",
+      "provider": "BAAI",
+      "average_score": 23.22,
+      "params_billions": 7.24,
+      "architecture": "MistralForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Infinity-Instruct-3M-0625-Mistral-7B",
+      "provider": "BAAI",
+      "average_score": 22.84,
+      "params_billions": 7.24,
+      "architecture": "MistralForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Infinity-Instruct-3M-0613-Mistral-7B",
+      "provider": "BAAI",
+      "average_score": 22.29,
+      "params_billions": 7.24,
+      "architecture": "MistralForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "PHI-4-Hindi",
+      "provider": "1024m",
+      "average_score": 27.48,
+      "params_billions": 14.66,
+      "architecture": "LlamaForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Jallabi-34B",
+      "provider": "AbacusResearch",
+      "average_score": 26.19,
+      "params_billions": 34.39,
+      "architecture": "LlamaForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "aya-23-35B",
+      "provider": "CohereForAI",
+      "average_score": 24.76,
+      "params_billions": 34.98,
+      "architecture": "CohereForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "aya-23-8B",
+      "provider": "CohereForAI",
+      "average_score": 16.01,
+      "params_billions": 8.03,
+      "architecture": "CohereForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Infinity-Instruct-3M-0625-Llama3-8B",
+      "provider": "BAAI",
+      "average_score": 22.06,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Marco-o1",
+      "provider": "AIDC-AI",
+      "average_score": 27.64,
+      "params_billions": 7.62,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "blossom-v5.1-9b",
+      "provider": "Azure99",
+      "average_score": 26.47,
+      "params_billions": 8.83,
+      "architecture": "LlamaForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Qwen2.5-7B-Hindi-Custom-Instruct",
+      "provider": "1-800-LLMs",
+      "average_score": 31.02,
+      "params_billions": 14.77,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "c4ai-command-r7b-12-2024",
+      "provider": "CohereForAI",
+      "average_score": 31.62,
+      "params_billions": 8.03,
+      "architecture": "Cohere2ForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Yi-34B-200K",
+      "provider": "01-ai",
+      "average_score": 20.01,
+      "params_billions": 34.39,
+      "architecture": "LlamaForCausalLM",
+      "type": "Pretrained"
+    },
+    {
+      "name": "SHBA",
+      "provider": "Aryanne",
+      "average_score": 29.88,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "miqu-1-70b-sf",
+      "provider": "152334H",
+      "average_score": 29.10,
+      "params_billions": 68.98,
+      "architecture": "LlamaForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Aura-8B",
+      "provider": "AuraIndustries",
+      "average_score": 27.36,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "T.E-8.1",
+      "provider": "Cran-May",
+      "average_score": 35.70,
+      "params_billions": 7.62,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Rombos-Qwen2.5-7B-Inst-BaseMerge-TIES",
+      "provider": "CombinHorizon",
+      "average_score": 35.37,
+      "params_billions": 7.62,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "blossom-v5-llama3-8b",
+      "provider": "Azure99",
+      "average_score": 14.60,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "gemma-2-aeria-infinity-9b",
+      "provider": "AELLM",
+      "average_score": 31.92,
+      "params_billions": 9.24,
+      "architecture": "Gemma2ForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "gemma-2-lyco-infinity-9b",
+      "provider": "AELLM",
+      "average_score": 30.05,
+      "params_billions": 10.16,
+      "architecture": "MixtralForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Neos-Phi-3-14B-v0.1",
+      "provider": "BlackBeenie",
+      "average_score": 27.03,
+      "params_billions": 13.96,
+      "architecture": "Phi3ForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "SphinX",
+      "provider": "Daemontatox",
+      "average_score": 29.87,
+      "params_billions": 7.62,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Neos-Gemma-2-9b",
+      "provider": "BlackBeenie",
+      "average_score": 25.48,
+      "params_billions": 9.24,
+      "architecture": "Gemma2ForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Zirel-7B-Math",
+      "provider": "Daemontatox",
+      "average_score": 30.98,
+      "params_billions": 7.62,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Yi-1.5-9B-Chat-16K",
+      "provider": "01-ai",
+      "average_score": 23.77,
+      "params_billions": 8.83,
+      "architecture": "LlamaForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Llama-3.1-8B-ArliAI-RPMax-v1.1",
+      "provider": "ArliAI",
+      "average_score": 23.94,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Yi-1.5-9B-32K",
+      "provider": "01-ai",
+      "average_score": 19.81,
+      "params_billions": 8.83,
+      "architecture": "LlamaForCausalLM",
+      "type": "Pretrained"
+    },
+    {
+      "name": "Qwen2.5-3B-continuous-learnt",
+      "provider": "AtAndDev",
+      "average_score": 17.48,
+      "params_billions": 1.54,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "NeuralDaredevil-SuperNova-Lite-7B-DARETIES-abliterated",
+      "provider": "BoltMonkey",
+      "average_score": 27.78,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "Aura-4B",
+      "provider": "AuraIndustries",
+      "average_score": 16.06,
+      "params_billions": 4.51,
+      "architecture": "LlamaForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "DreadMix",
+      "provider": "BoltMonkey",
+      "average_score": 28.76,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "QWEN-14B-B100",
+      "provider": "1024m",
+      "average_score": 41.92,
+      "params_billions": 14.77,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Yi-1.5-6B-Chat-16K",
+      "provider": "01-ai",
+      "average_score": 15.35,
+      "params_billions": 6.06,
+      "architecture": "LlamaForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "ArliAI-RPMax-12B-v1.1",
+      "provider": "ArliAI",
+      "average_score": 20.98,
+      "params_billions": 12.25,
+      "architecture": "MistralForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Yi-1.5-6B-200K",
+      "provider": "01-ai",
+      "average_score": 11.10,
+      "params_billions": 6.06,
+      "architecture": "LlamaForCausalLM",
+      "type": "Pretrained"
+    },
+    {
+      "name": "Gemma2-9B-IT-Simpo-Infinity-Preference",
+      "provider": "BAAI",
+      "average_score": 22.61,
+      "params_billions": 9.24,
+      "architecture": "Gemma2ForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "SuperNeuralDreadDevil-8b",
+      "provider": "BoltMonkey",
+      "average_score": 27.11,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "AetherDrake-SFT",
+      "provider": "Daemontatox",
+      "average_score": 22.92,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Bloslain-8B-v0.2",
+      "provider": "BlackBeenie",
+      "average_score": 23.80,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "FuseChat-Llama-3.1-8B-Instruct-preview",
+      "provider": "AALF",
+      "average_score": 28.57,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "FuseChat-Llama-3.1-8B-SFT-preview",
+      "provider": "AALF",
+      "average_score": 29.23,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Llama-3.1-8B-pythonic-passthrough-merge",
+      "provider": "BlackBeenie",
+      "average_score": 7.40,
+      "params_billions": 20.25,
+      "architecture": "LlamaForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "Llama-3.1-8B-OpenO1-SFT-v0.1",
+      "provider": "BlackBeenie",
+      "average_score": 21.40,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Neos-Llama-3.1-8B",
+      "provider": "BlackBeenie",
+      "average_score": 19.51,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "llama-3-luminous-merged",
+      "provider": "BlackBeenie",
+      "average_score": 21.62,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "Book-Gut12B",
+      "provider": "ClaudioItaly",
+      "average_score": 23.39,
+      "params_billions": 12.25,
+      "architecture": "MistralForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "Albacus",
+      "provider": "ClaudioItaly",
+      "average_score": 20.51,
+      "params_billions": 8.99,
+      "architecture": "MistralForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "Evolutionstory-7B-v2.2",
+      "provider": "ClaudioItaly",
+      "average_score": 20.81,
+      "params_billions": 7.24,
+      "architecture": "MistralForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "intelligence-cod-rag-7b-v3",
+      "provider": "ClaudioItaly",
+      "average_score": 31.84,
+      "params_billions": 7.62,
+      "architecture": "Qwen2ForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "DocumentCogito",
+      "provider": "Daemontatox",
+      "average_score": 29.11,
+      "params_billions": 10.67,
+      "architecture": "MllamaForConditionalGeneration",
+      "type": "Multimodal"
+    },
+    {
+      "name": "L-MChat-7b",
+      "provider": "Artples",
+      "average_score": 21.24,
+      "params_billions": 7.24,
+      "architecture": "MistralForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "L-MChat-Small",
+      "provider": "Artples",
+      "average_score": 15.23,
+      "params_billions": 2.78,
+      "architecture": "PhiForCausalLM",
+      "type": "Base Merge"
+    },
+    {
+      "name": "Llama-3.1-8B-Galore-openassistant-guanaco",
+      "provider": "BlackBeenie",
+      "average_score": 18.37,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Fine-tuned"
+    },
+    {
+      "name": "Llama-PLLuM-8B-chat",
+      "provider": "CYFRAGOVPL",
+      "average_score": 14.61,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "Llama-PLLuM-8B-base",
+      "provider": "CYFRAGOVPL",
+      "average_score": 14.52,
+      "params_billions": 8.03,
+      "architecture": "LlamaForCausalLM",
+      "type": "Continuously Pretrained"
+    },
+    {
+      "name": "PLLuM-12B-chat",
+      "provider": "CYFRAGOVPL",
+      "average_score": 15.35,
+      "params_billions": 12.25,
+      "architecture": "MistralForCausalLM",
+      "type": "Chat (Instruct)"
+    },
+    {
+      "name": "PLLuM-12B-base",
+      "provider": "CYFRAGOVPL",
+      "average_score": 14.67,
+      "params_billions": 12.25,
+      "architecture": "MistralForCausalLM",
+      "type": "Continuously Pretrained"
+    }
+  ]
+}

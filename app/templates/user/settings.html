@@ -1,47 +1,402 @@
+<!-- app/templates/user/settings.html -->
 {% extends "base.html" %}
+
+{% block additional_styles %}
+<!-- Font Awesome для иконок -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    .settings-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .settings-header {
+        margin-bottom: 32px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .settings-header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .settings-header i {
+        font-size: 24px;
+        color: var(--primary-color);
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .settings-card {
+        background-color: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 1px solid var(--border-color);
+    }
+
+    .settings-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .settings-card h2 {
+        font-size: 20px;
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .settings-card h2 i {
+        color: var(--primary-color);
+    }
+
+    .settings-card p {
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        font-weight: 600;
+        margin: 0 auto 24px;
+    }
+
+    .profile-info {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .profile-info h3 {
+        font-size: 18px;
+        margin: 0 0 4px 0;
+        color: var(--text-primary);
+    }
+
+    .profile-info p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .api-integration {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 20px;
+    }
+
+    .api-integration h3 {
+        font-size: 16px;
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: var(--text-primary);
+    }
+
+    .api-integration p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 15px;
+    }
+
+    .api-btn {
+        display: inline-block;
+        padding: 8px 16px;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background-color 0.2s;
+    }
+
+    .api-btn:hover {
+        background-color: var(--primary-hover);
+    }
+
+    .form-divider {
+        height: 1px;
+        background-color: var(--border-color);
+        margin: 24px 0;
+    }
+
+    .password-requirements {
+        margin-top: 16px;
+        font-size: 14px;
+        color: var(--text-secondary);
+        background-color: #f8f9fa;
+        padding: 12px;
+        border-radius: 8px;
+        border-left: 3px solid var(--primary-color);
+    }
+
+    .password-requirements ul {
+        margin: 8px 0 0 0;
+        padding-left: 24px;
+    }
+
+    .password-requirements li {
+        margin-bottom: 4px;
+    }
+
+    .btn-submit-password {
+        margin-top: 24px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .theme-selector {
+        margin-top: 20px;
+    }
+
+    .theme-options {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .theme-option {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .theme-option:hover {
+        transform: scale(1.1);
+    }
+
+    .theme-option.active {
+        border-color: var(--primary-color);
+    }
+
+    .light-theme {
+        background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+    }
+
+    .dark-theme {
+        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    }
+
+    .blue-theme {
+        background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+    }
+
+    .green-theme {
+        background: linear-gradient(135deg, #38a169 0%, #276749 100%);
+    }
+
+    @media (max-width: 768px) {
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="settings-container">
-    <h1>User Settings</h1>
+    <div class="settings-header">
+        <i class="fas fa-cog"></i>
+        <h1>Настройки пользователя</h1>
+    </div>
 
-    <div class="settings-card">
-        <h2>Account Information</h2>
-        <div class="account-info">
-            <p><strong>Username:</strong> {{ current_user.username }}</p>
-            <p><strong>Account created:</strong> {{ current_user.id }}</p>
+    <div class="settings-grid">
+        <!-- Profile Card -->
+        <div class="settings-card">
+            <h2><i class="fas fa-user-circle"></i> Профиль</h2>
+            <p>Управление личной информацией и предпочтениями</p>
+
+            <div class="profile-avatar">
+                {{ current_user.username[:1] }}
+            </div>
+
+            <div class="profile-info">
+                <h3>{{ current_user.username }}</h3>
+                <p>ID пользователя: {{ current_user.id }}</p>
+            </div>
+
+            <div class="theme-selector">
+                <h3>Тема интерфейса</h3>
+                <p>Выберите предпочитаемую цветовую тему</p>
+                <div class="theme-options">
+                    <div class="theme-option light-theme active" title="Светлая тема"></div>
+                    <div class="theme-option dark-theme" title="Тёмная тема"></div>
+                    <div class="theme-option blue-theme" title="Синяя тема"></div>
+                    <div class="theme-option green-theme" title="Зелёная тема"></div>
+                </div>
+            </div>
+
+            <div class="api-integration">
+                <h3>Интеграция API</h3>
+                <p>Настройте API-ключи и подключения для интеграции с внешними сервисами</p>
+                <a href="#" class="api-btn">Управление API-ключами</a>
+            </div>
+        </div>
+
+        <!-- Change Password Card -->
+        <div class="settings-card">
+            <h2><i class="fas fa-key"></i> Безопасность</h2>
+            <p>Обновите пароль и управляйте настройками безопасности</p>
+
+            <form method="POST" action="{{ url_for('user.change_password') }}">
+                {{ password_form.hidden_tag() }}
+
+                <div class="form-group">
+                    <label for="current_password">
+                        <i class="fas fa-lock"></i> {{ password_form.current_password.label.text }}
+                    </label>
+                    {{ password_form.current_password(class="form-control", placeholder="Введите текущий пароль") }}
+                </div>
+
+                <div class="form-divider"></div>
+
+                <div class="form-group">
+                    <label for="new_password">
+                        <i class="fas fa-key"></i> {{ password_form.new_password.label.text }}
+                    </label>
+                    {{ password_form.new_password(class="form-control", placeholder="Введите новый пароль") }}
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">
+                        <i class="fas fa-check-circle"></i> {{ password_form.confirm_password.label.text }}
+                    </label>
+                    {{ password_form.confirm_password(class="form-control", placeholder="Подтвердите новый пароль") }}
+                </div>
+
+                <div class="password-requirements">
+                    <strong>Требования к паролю:</strong>
+                    <ul>
+                        <li>Не менее 6 символов</li>
+                        <li>Включает заглавные и строчные буквы</li>
+                        <li>Включает как минимум одну цифру</li>
+                        <li>Включает как минимум один специальный символ</li>
+                    </ul>
+                </div>
+
+                <div class="form-group">
+                    {{ password_form.submit(class="btn btn-primary btn-submit-password") }}
+                </div>
+            </form>
         </div>
     </div>
-
-    <div class="settings-card">
-        <h2>Change Password</h2>
-        <form method="POST" action="{{ url_for('user.change_password') }}">
-            {{ password_form.hidden_tag() }}
-
-            <div class="form-group">
-                {{ password_form.current_password.label }}
-                {{ password_form.current_password(class="form-control") }}
-            </div>
-
-            <div class="form-group">
-                {{ password_form.new_password.label }}
-                {{ password_form.new_password(class="form-control") }}
-            </div>
-
-            <div class="form-group">
-                {{ password_form.confirm_password.label }}
-                {{ password_form.confirm_password(class="form-control") }}
-            </div>
-
-            <div class="form-group">
-                {{ password_form.submit(class="btn btn-primary") }}
-            </div>
-        </form>
-    </div>
-
-    <div class="settings-card">
-        <h2>Manage Models</h2>
-        <p>Add, edit, and delete your custom models for benchmarking.</p>
-        <a href="{{ url_for('user.models') }}" class="btn btn-secondary">Manage Models</a>
-    </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Theme selector functionality
+        const themeOptions = document.querySelectorAll('.theme-option');
+
+        themeOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // Remove active class from all options
+                themeOptions.forEach(opt => opt.classList.remove('active'));
+
+                // Add active class to clicked option
+                this.classList.add('active');
+
+                // Here you would implement the actual theme change
+                // For now, just show a notification
+                const themeName = this.classList.contains('light-theme') ? 'Светлая' :
+                                  this.classList.contains('dark-theme') ? 'Тёмная' :
+                                  this.classList.contains('blue-theme') ? 'Синяя' : 'Зелёная';
+
+                // Create a notification
+                const notification = document.createElement('div');
+                notification.className = 'notification success';
+                notification.innerHTML = `
+                    <div class="notification-header">
+                        <strong>Тема изменена</strong>
+                        <button class="notification-close">&times;</button>
+                    </div>
+                    <div class="notification-body">
+                        ${themeName} тема успешно применена!
+                    </div>`;
+
+                document.body.appendChild(notification);
+
+                // Show notification
+                setTimeout(() => notification.classList.add('show'), 10);
+
+                // Add close button functionality
+                notification.querySelector('.notification-close').addEventListener('click', () => {
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 300);
+                });
+
+                // Auto hide after 3 seconds
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            });
+        });
+
+        // API Keys button functionality
+        document.querySelector('.api-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Create a notification
+            const notification = document.createElement('div');
+            notification.className = 'notification info';
+            notification.innerHTML = `
+                <div class="notification-header">
+                    <strong>Скоро будет доступно</strong>
+                    <button class="notification-close">&times;</button>
+                </div>
+                <div class="notification-body">
+                    Управление API-ключами будет доступно в следующем обновлении!
+                </div>`;
+
+            document.body.appendChild(notification);
+
+            // Show notification
+            setTimeout(() => notification.classList.add('show'), 10);
+
+            // Add close button functionality
+            notification.querySelector('.notification-close').addEventListener('click', () => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            });
+
+            // Auto hide after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        });
+    });
+</script>
 {% endblock %}

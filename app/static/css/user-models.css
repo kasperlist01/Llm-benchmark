@@ -28,22 +28,27 @@
   font-size: 14px;
 }
 
+/* app/static/css/user-models.css */
+/* Контейнер моделей, который управляет отступами */
 .models-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 50px; /* Уменьшен отступ между карточками */
+    margin-bottom: 60px; /* Добавлен отступ снизу для контейнера */
 }
+
 
 .model-card {
   background-color: var(--card-bg);
   border-radius: var(--border-radius);
-  padding: 24px;
+  padding: 16px; /* Уменьшен padding */
   box-shadow: var(--shadow);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   border: 1px solid var(--border-color);
   height: 100%;
   display: flex;
   flex-direction: column;
+  /* Убран margin-bottom отсюда */
 }
 
 .model-card:hover {
@@ -55,61 +60,61 @@
 .model-header {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px; /* Уменьшен нижний отступ */
 }
 
 .model-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 40px; /* Уменьшен размер иконки */
+  height: 40px;
+  border-radius: 8px; /* Уменьшен радиус скругления */
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 18px;
+  font-size: 16px; /* Уменьшен размер шрифта */
   color: white;
-  margin-right: 16px;
+  margin-right: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .model-info h3 {
-  font-size: 18px;
-  margin: 0 0 6px 0;
+  font-size: 16px; /* Уменьшен размер шрифта */
+  margin: 0 0 4px 0; /* Уменьшен нижний отступ */
   color: var(--text-primary);
 }
 
 .model-info p {
-  font-size: 14px;
+  font-size: 13px; /* Уменьшен размер шрифта */
   color: var(--text-secondary);
   margin: 0;
 }
 
 .model-details {
-  margin-bottom: 24px;
+  margin-bottom: 16px; /* Уменьшен нижний отступ */
   flex-grow: 1;
 }
 
 .model-description {
-  font-size: 14px;
+  font-size: 13px; /* Уменьшен размер шрифта */
   color: var(--text-secondary);
-  margin-bottom: 16px;
-  line-height: 1.5;
+  margin-bottom: 12px; /* Уменьшен нижний отступ */
+  line-height: 1.4;
 }
 
 .model-endpoint {
   display: flex;
   flex-direction: column;
-  font-size: 13px;
+  font-size: 12px; /* Уменьшен размер шрифта */
   background-color: #f5f7fa;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 10px; /* Уменьшен padding */
+  border-radius: 6px;
   border: 1px solid #e9ecef;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .model-endpoint .label {
   font-weight: 600;
-  margin-bottom: 6px;
+  margin-bottom: 4px; /* Уменьшен нижний отступ */
   color: var(--text-primary);
 }
 
@@ -117,7 +122,7 @@
   word-break: break-all;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   color: #0d6efd;
-  padding: 6px;
+  padding: 4px; /* Уменьшен padding */
   background-color: rgba(13, 110, 253, 0.05);
   border-radius: 4px;
 }
@@ -125,7 +130,7 @@
 .model-actions {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px; /* Уменьшен отступ между кнопками */
   margin-top: auto;
 }
 
@@ -135,9 +140,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px;
-  font-size: 13px;
+  gap: 6px;
+  padding: 8px; /* Уменьшен padding */
+  font-size: 12px; /* Уменьшен размер шрифта */
   font-weight: 500;
   width: 100%;
 }
@@ -149,7 +154,7 @@
 .empty-models {
   grid-column: 1 / -1;
   text-align: center;
-  padding: 60px 40px;
+  padding: 40px 30px; /* Уменьшены отступы */
   background-color: var(--card-bg);
   border-radius: var(--border-radius);
   color: var(--text-secondary);
@@ -157,24 +162,24 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 12px; /* Уменьшен отступ между элементами */
 }
 
 .empty-models i {
   color: #d1d5db;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .empty-models h3 {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px; /* Уменьшен размер шрифта */
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .empty-models p {
-  margin: 0 0 16px 0;
-  font-size: 16px;
+  margin: 0 0 12px 0; /* Уменьшен нижний отступ */
+  font-size: 14px; /* Уменьшен размер шрифта */
 }
 
 /* Responsive adjustments */

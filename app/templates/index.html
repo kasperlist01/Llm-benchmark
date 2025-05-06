@@ -1,3 +1,4 @@
+<!-- app/templates/index.html -->
 {% extends "base.html" %}
 
 {% block content %}
@@ -13,14 +14,14 @@
         {% include 'components/metrics_configuration.html' %}
 
         <button class="run-button" id="runBenchmarkBtn">
-            Run Benchmark
+            Запустить тестирование
         </button>
     </div>
 
     <div class="results-panel">
         <div id="resultsContainer">
             <div class="empty-results">
-                <p>Select models and benchmarks, then run to see results</p>
+                <p>Выберите модели и тесты, затем запустите для просмотра результатов</p>
             </div>
         </div>
     </div>
@@ -47,6 +48,7 @@
     }
 
     // Initialize application
+    // в скрипте в конце файла
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize components
         initModelComparison();
@@ -54,13 +56,14 @@
         initMetricsConfiguration();
 
         // Run benchmark button event listener
+        // Модифицируем обработчик события нажатия на кнопку в index.html
         document.getElementById('runBenchmarkBtn').addEventListener('click', function() {
             const selectedModelIds = getSelectedModels();
             const selectedBenchmarks = getSelectedBenchmarks();
             const metrics = getMetricsConfiguration();
 
             if (selectedModelIds.length === 0 || selectedBenchmarks.length === 0) {
-                alert('Please select at least one model and one benchmark');
+                alert('Пожалуйста, выберите хотя бы одну модель и один тест');
                 return;
             }
 
@@ -74,16 +77,42 @@
             if (!compatibility.compatible) {
                 alert(compatibility.message);
                 return;
+            } else if (compatibility.message) {
+                // Если есть сообщение, но совместимость не нарушена (например, предупреждение)
+                if (confirm(compatibility.message + "\n\nПродолжить?")) {
+                    // Продолжаем выполнение
+                } else {
+                    return; // Пользователь отменил
+                }
             }
 
-            // Если пользователь выбрал blind_test, автоматически убираем все остальные
+            // Плавная прокрутка страницы вверх
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+
+            // Если пользователь выбрал blind_test или gpt4o_eval, автоматически убираем все остальные
             let benchmarksToSend = selectedBenchmarks;
-            if (selectedBenchmarks.includes('blind_test') && selectedBenchmarks.length > 1) {
-                benchmarksToSend = ['blind_test'];
+            if ((selectedBenchmarks.includes('blind_test') || selectedBenchmarks.includes('gpt4o_eval')) && selectedBenchmarks.length > 1) {
+                if (selectedBenchmarks.includes('blind_test')) {
+                    benchmarksToSend = ['blind_test'];
+                } else {
+                    benchmarksToSend = ['gpt4o_eval'];
+                }
             }
 
             // Show loading state
-            document.getElementById('resultsContainer').innerHTML = '<div class="loading">Running benchmarks...</div>';
+            document.getElementById('resultsContainer').innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Выполнение тестирования</div>
+                    <div class="loading-details">Обработка моделей и вычисление метрик</div>
+                    <div class="loading-progress">
+                        <div class="loading-progress-bar"></div>
+                    </div>
+                </div>
+            `;
 
             // Run benchmark API call
             fetch('/api/run-benchmark', {
@@ -99,7 +128,7 @@
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`Ошибка HTTP! Статус: ${response.status}`);
                 }
                 return response.json();
             })
@@ -111,9 +140,9 @@
                 renderResultsVisualization(results, metrics);
             })
             .catch(error => {
-                console.error('Error running benchmark:', error);
+                console.error('Ошибка при выполнении тестирования:', error);
                 document.getElementById('resultsContainer').innerHTML =
-                    `<div class="error">Error running benchmark: ${error.message}</div>`;
+                    `<div class="error">Ошибка при выполнении тестирования: ${error.message}</div>`;
             });
         });
     });

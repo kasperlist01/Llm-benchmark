@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: llm-benchmark-app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/app/app
+      - ./data.json:/app/data.json
+      - app-data:/app/instance
+    environment:
+      - SECRET_KEY=your-secret-key-change-in-production
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_URL=${OPENAI_API_URL:-https://api.openai.com/v1}
+    restart: unless-stopped
+
+volumes:
+  app-data:

@@ -3,13 +3,14 @@ import time
 import openai
 
 
-def test_model_connection(api_url, api_key=None, timeout=10):
+def test_model_connection(api_url, api_key=None, model_name=None, timeout=10):
     """
     Test connection to a model API using OpenAI client
 
     Args:
         api_url (str): The API URL to test
         api_key (str, optional): API key if required
+        model_name (str, optional): Model name to use for testing
         timeout (int, optional): Request timeout in seconds
 
     Returns:
@@ -23,13 +24,12 @@ def test_model_connection(api_url, api_key=None, timeout=10):
             timeout=timeout
         )
 
-        # Simple test prompt
         start_time = time.time()
         response = client.chat.completions.create(
-            model="gemma3:4b",  # You can make this configurable if needed
+            model=model_name,
             messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": "Hello, this is a test. Please respond with 'Connection successful'."}
+                {"role": "system", "content": "Вы - полезный ассистент."},
+                {"role": "user", "content": "Привет, это тест. Пожалуйста, ответьте 'Соединение успешно'."}
             ],
             max_tokens=10
         )
@@ -38,7 +38,7 @@ def test_model_connection(api_url, api_key=None, timeout=10):
         # Process successful response
         return {
             "success": True,
-            "message": f"Connection successful! Response time: {response_time:.2f}s",
+            "message": f"Соединение успешно! Время ответа: {response_time:.2f}с",
             "response": {
                 "content": response.choices[0].message.content,
                 "model": response.model
@@ -48,31 +48,31 @@ def test_model_connection(api_url, api_key=None, timeout=10):
     except openai.APIError as e:
         return {
             "success": False,
-            "message": f"API error: {str(e)}"
+            "message": f"Ошибка API: {str(e)}"
         }
     except openai.APIConnectionError as e:
         return {
             "success": False,
-            "message": f"Connection error: Could not connect to the API: {str(e)}"
+            "message": f"Ошибка соединения: Не удалось подключиться к API: {str(e)}"
         }
     except openai.RateLimitError as e:
         return {
             "success": False,
-            "message": f"Rate limit exceeded: {str(e)}"
+            "message": f"Превышен лимит запросов: {str(e)}"
         }
     except openai.AuthenticationError as e:
         return {
             "success": False,
-            "message": f"Authentication error: {str(e)}"
+            "message": f"Ошибка аутентификации: {str(e)}"
         }
     except openai.APITimeoutError as e:
         return {
             "success": False,
-            "message": f"Connection timed out after {timeout} seconds: {str(e)}"
+            "message": f"Соединение прервано по тайм-ауту после {timeout} секунд: {str(e)}"
         }
     except Exception as e:
-        current_app.logger.error(f"Error testing model connection: {str(e)}")
+        current_app.logger.error(f"Ошибка при тестировании соединения с моделью: {str(e)}")
         return {
             "success": False,
-            "message": f"Unexpected error: {str(e)}"
+            "message": f"Непредвиденная ошибка: {str(e)}"
         }
