@@ -1,10 +1,9 @@
-# app/__init__.py
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_sqlalchemy import SQLAlchemy
+
 from app.config import Config
 
-# Инициализируем расширения
 db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
@@ -16,23 +15,20 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Инициализируем расширения с приложением
     db.init_app(app)
     login_manager.init_app(app)
 
-    # Регистрируем маршруты
     from app.routes import main_bp
     app.register_blueprint(main_bp)
 
     from app.auth.routes import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
-    # Регистрируем blueprint для пользовательских настроек
     from app.user.routes import user_bp
     app.register_blueprint(user_bp, url_prefix='/user')
 
-    # Создаем таблицы базы данных
     with app.app_context():
+        from app.models import user, user_model, api_integration, user_settings, user_dataset
         db.create_all()
 
     return app

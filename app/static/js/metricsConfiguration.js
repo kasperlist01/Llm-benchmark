@@ -1,42 +1,90 @@
-// app/static/js/metricsConfiguration.js
 let metricsConfig = {
-    quantitative: { weight: 0.5 },
-    qualitative: { weight: 0.5 },
-    hallucination: { weight: 0.3 },
-    safety: { weight: 0.2 }
+    rouge: {weight: 0.4},
+    semantic: {weight: 0.3},
+    bertScore: {weight: 0.3}
 };
 
 function initMetricsConfiguration() {
-    // Set up event listeners for metric sliders
-    const quantitativeSlider = document.getElementById('quantitativeWeight');
-    const qualitativeSlider = document.getElementById('qualitativeWeight');
-    const hallucinationSlider = document.getElementById('hallucinationWeight');
-    const safetySlider = document.getElementById('safetyWeight');
+    const rougeSlider = document.getElementById('rougeWeight');
+    const semanticSlider = document.getElementById('semanticWeight');
+    const bertScoreSlider = document.getElementById('bertScoreWeight');
 
-    quantitativeSlider.addEventListener('input', () => {
-        updateMetricWeight('quantitative', parseFloat(quantitativeSlider.value));
-    });
+    if (rougeSlider) {
+        rougeSlider.addEventListener('input', () => {
+            const newValue = parseFloat(rougeSlider.value);
+            updateMetricWeightWithValidation('rouge', newValue, rougeSlider);
+        });
+    }
 
-    qualitativeSlider.addEventListener('input', () => {
-        updateMetricWeight('qualitative', parseFloat(qualitativeSlider.value));
-    });
+    if (semanticSlider) {
+        semanticSlider.addEventListener('input', () => {
+            const newValue = parseFloat(semanticSlider.value);
+            updateMetricWeightWithValidation('semantic', newValue, semanticSlider);
+        });
+    }
 
-    hallucinationSlider.addEventListener('input', () => {
-        updateMetricWeight('hallucination', parseFloat(hallucinationSlider.value));
-    });
+    if (bertScoreSlider) {
+        bertScoreSlider.addEventListener('input', () => {
+            const newValue = parseFloat(bertScoreSlider.value);
+            updateMetricWeightWithValidation('bertScore', newValue, bertScoreSlider);
+        });
+    }
 
-    safetySlider.addEventListener('input', () => {
-        updateMetricWeight('safety', parseFloat(safetySlider.value));
-    });
+    // Инициализируем отображение значений
+    updateAllDisplays();
 }
 
-function updateMetricWeight(metricKey, value) {
-    metricsConfig[metricKey].weight = value;
+function updateMetricWeightWithValidation(metricKey, newValue, sliderElement) {
+    // Сохраняем старое значение
+    const oldValue = metricsConfig[metricKey].weight;
 
-    // Update the displayed value
-    document.getElementById(`${metricKey}WeightValue`).textContent = value.toFixed(1);
+    // Временно устанавливаем новое значение для проверки
+    metricsConfig[metricKey].weight = newValue;
+
+    // Проверяем общую сумму
+    const totalWeight = Object.values(metricsConfig).reduce((sum, config) => sum + config.weight, 0);
+
+    // Если сумма превышает 1.0, возвращаем старое значение и блокируем изменение
+    if (totalWeight > 1.0) {
+        metricsConfig[metricKey].weight = oldValue;
+        sliderElement.value = oldValue;
+        return;
+    }
+
+    // Если все в порядке, обновляем отображение
+    updateMetricDisplay(metricKey, newValue);
+}
+
+function updateMetricDisplay(metricKey, value) {
+    const valueElement = document.getElementById(`${metricKey}WeightValue`);
+    if (valueElement) {
+        valueElement.textContent = value.toFixed(1);
+    }
+}
+
+function updateAllDisplays() {
+    updateMetricDisplay('rouge', metricsConfig.rouge.weight);
+    updateMetricDisplay('semantic', metricsConfig.semantic.weight);
+    updateMetricDisplay('bertScore', metricsConfig.bertScore.weight);
+}
+
+function showMetricsConfiguration() {
+    const container = document.getElementById('metricsConfigurationContainer');
+    if (container) {
+        container.style.display = 'block';
+    }
+}
+
+function hideMetricsConfiguration() {
+    const container = document.getElementById('metricsConfigurationContainer');
+    if (container) {
+        container.style.display = 'none';
+    }
 }
 
 function getMetricsConfiguration() {
-    return metricsConfig;
+    return {
+        config: metricsConfig,
+        type: 'metrics'
+    };
 }

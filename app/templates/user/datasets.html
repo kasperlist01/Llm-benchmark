@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="user-datasets-container">
+        <div class="page-header">
+            <h1>Мои датасеты</h1>
+        </div>
+
+        {% if datasets %}
+            <div class="datasets-list">
+                {% for dataset in datasets %}
+                    <div class="dataset-card">
+                        <div class="dataset-header">
+                            <div class="dataset-icon">
+                                <i class="fas fa-table"></i>
+                            </div>
+                            <div class="dataset-info">
+                                <h3>{{ dataset.name }}</h3>
+                                <p>{{ dataset.filename }}</p>
+                            </div>
+                        </div>
+                        <div class="dataset-details">
+                            <p class="dataset-description">{{ dataset.description or "Описание не предоставлено." }}</p>
+
+                            <div class="dataset-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">Строк:</span>
+                                    <span class="stat-value">{{ "{:,}".format(dataset.row_count) if dataset.row_count else "Неизвестно" }}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Колонок:</span>
+                                    <span class="stat-value">{{ dataset.column_count or "Неизвестно" }}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Размер:</span>
+                                    <span class="stat-value">{{ dataset.get_file_size_human() }}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Загружен:</span>
+                                    <span class="stat-value">{{ dataset.created_at.strftime('%d.%m.%Y') if dataset.created_at else "Неизвестно" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dataset-actions">
+                            <button class="btn btn-secondary preview-dataset-btn"
+                                    data-id="{{ dataset.id }}">
+                                <i class="fas fa-eye"></i> Предпросмотр
+                            </button>
+                            <form action="{{ url_for('user.delete_dataset', dataset_id=dataset.id) }}" method="post"
+                                  onsubmit="return confirm('Вы уверены, что хотите удалить этот датасет?');">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash-alt"></i> Удалить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="datasets-footer" style="margin-top:32px; text-align:center;">
+                <button id="addDatasetBtn" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Добавить новый датасет
+                </button>
+            </div>
+
+        {% else %}
+            <div class="empty-datasets">
+                <i class="fas fa-table fa-4x"></i>
+                <h3>Пока нет загруженных датасетов</h3>
+                <p>Загрузите CSV файлы для использования в качестве тестовых данных</p>
+                <button id="addDatasetBtn" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Загрузить первый датасет
+                </button>
+            </div>
+        {% endif %}
+    </div>
+
+    <div id="addDatasetModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Загрузить новый датасет</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addDatasetForm" method="POST" action="{{ url_for('user.add_dataset') }}"
+                      enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+
+                    <div class="form-row">
+                        <div class="form-group form-group-large">
+                            {{ form.name.label }}
+                            {{ form.name(class="form-control", placeholder="Название датасета") }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        {{ form.description.label }}
+                        {{ form.description(class="form-control", placeholder="Краткое описание датасета", rows=2) }}
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-label-help">
+                            {{ form.csv_file.label }}
+                            <span class="tooltip-icon"
+                                  data-tooltip="Загрузите CSV файл с данными для тестирования">?</span>
+                        </div>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            {{ form.csv_file(class="form-control file-input", accept=".csv") }}
+                            <div class="file-upload-text">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Нажмите для выбора CSV файла или перетащите сюда</span>
+                                <small>Поддерживаются только .csv файлы</small>
+                            </div>
+                        </div>
+                        <div id="fileInfo" class="file-info" style="display: none;">
+                            <div class="file-name"></div>
+                            <div class="file-size"></div>
+                        </div>
+                    </div>
+
+                    <div class="dataset-requirements">
+                        <strong>Требования к CSV файлу:</strong>
+                        <ul>
+                            <li>Первая строка должна содержать заголовки колонок</li>
+                            <li>Данные должны быть разделены запятыми или точками с запятой</li>
+                            <li>Кодировка файла: UTF-8</li>
+                            <li>Максимальный размер файла: 50 МБ</li>
+                        </ul>
+                    </div>
+
+                    <div class="form-actions">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="previewDatasetModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Предпросмотр датасета</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="previewContent">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Загрузка предпросмотра...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById('addDatasetModal');
+            const previewModal = document.getElementById('previewDatasetModal');
+            const closeBtns = document.querySelectorAll('.close');
+            const addDatasetBtn = document.getElementById('addDatasetBtn');
+            const fileInput = document.getElementById('csv_file');
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const fileInfo = document.getElementById('fileInfo');
+
+            function openModal(modalElement) {
+                modalElement.style.display = 'block';
+                document.body.classList.add('modal-open');
+            }
+
+            function closeModal(modalElement) {
+                modalElement.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                if (modalElement === modal) {
+                    document.getElementById('addDatasetForm').reset();
+                    fileInfo.style.display = 'none';
+                }
+            }
+
+            if (addDatasetBtn) {
+                addDatasetBtn.addEventListener('click', () => openModal(modal));
+            }
+
+            closeBtns.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const modal = this.closest('.modal');
+                    closeModal(modal);
+                });
+            });
+
+            window.addEventListener('click', function (event) {
+                if (event.target.classList.contains('modal')) {
+                    closeModal(event.target);
+                }
+            });
+
+            if (fileUploadArea) {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    fileUploadArea.addEventListener(eventName, preventDefaults, false);
+                });
+
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    fileUploadArea.addEventListener(eventName, () => {
+                        fileUploadArea.classList.add('dragover');
+                    });
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    fileUploadArea.addEventListener(eventName, () => {
+                        fileUploadArea.classList.remove('dragover');
+                    });
+                });
+
+                fileUploadArea.addEventListener('drop', function (e) {
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        fileInput.files = files;
+                        handleFileSelect(files[0]);
+                    }
+                });
+            }
+
+            if (fileInput) {
+                fileInput.addEventListener('change', function (e) {
+                    if (e.target.files.length > 0) {
+                        handleFileSelect(e.target.files[0]);
+                    }
+                });
+            }
+
+            function handleFileSelect(file) {
+                const fileName = file.name;
+                const fileSize = formatFileSize(file.size);
+
+                document.querySelector('.file-name').textContent = fileName;
+                document.querySelector('.file-size').textContent = fileSize;
+                fileInfo.style.display = 'block';
+            }
+
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Б';
+                const k = 1024;
+                const sizes = ['Б', 'КБ', 'МБ', 'ГБ'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+            }
+
+            document.querySelectorAll('.preview-dataset-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const datasetId = this.getAttribute('data-id');
+                    previewDataset(datasetId);
+                });
+            });
+
+            function previewDataset(datasetId) {
+                openModal(previewModal);
+                const previewContent = document.getElementById('previewContent');
+
+                previewContent.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Загрузка предпросмотра...</div>
+                </div>
+            `;
+
+                fetch(`/user/datasets/preview/${datasetId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            renderPreview(data);
+                        } else {
+                            previewContent.innerHTML = `
+                            <div class="error">
+                                <p>Ошибка загрузки предпросмотра: ${data.error}</p>
+                            </div>
+                        `;
+                        }
+                    })
+                    .catch(error => {
+                        previewContent.innerHTML = `
+                        <div class="error">
+                            <p>Ошибка: ${error.message}</p>
+                        </div>
+                    `;
+                    });
+            }
+
+            function renderPreview(data) {
+                const previewContent = document.getElementById('previewContent');
+
+                if (!data.preview_data || data.preview_data.length === 0) {
+                    previewContent.innerHTML = '<p>Нет данных для предпросмотра</p>';
+                    return;
+                }
+
+                const columns = Object.keys(data.preview_data[0]);
+
+                previewContent.innerHTML = `
+                <div class="preview-info">
+                    <div class="preview-info-item">
+                        <div class="preview-info-value">${data.total_rows}</div>
+                        <div class="preview-info-label">Всего строк</div>
+                    </div>
+                    <div class="preview-info-item">
+                        <div class="preview-info-value">${columns.length}</div>
+                        <div class="preview-info-label">Колонок</div>
+                    </div>
+                    <div class="preview-info-item">
+                        <div class="preview-info-value">${data.preview_data.length}</div>
+                        <div class="preview-info-label">Показано строк</div>
+                    </div>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="preview-table">
+                        <thead>
+                            <tr>
+                                ${columns.map(col => `<th>${col}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.preview_data.map(row =>
+                    `<tr>${columns.map(col => `<td>${row[col] || ''}</td>`).join('')}</tr>`
+                ).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            }
+        });
+    </script>
+{% endblock %}
