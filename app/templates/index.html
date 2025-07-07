@@ -1,150 +1,260 @@
-<!-- app/templates/index.html -->
 {% extends "base.html" %}
 
 {% block content %}
-<div class="main-content">
-    <div class="configuration-panel">
-        <!-- Model Comparison Component -->
-        {% include 'components/model_comparison.html' %}
+    <div class="main-content">
+        <div class="configuration-panel">
+            {% include 'components/model_comparison.html' %}
+            {% include 'components/benchmark_selector.html' %}
+            {% include 'components/dataset_selector.html' %}
+            {% include 'components/metrics_configuration.html' %}
+        </div>
 
-        <!-- Benchmark Selector Component -->
-        {% include 'components/benchmark_selector.html' %}
+        <div class="results-panel">
+            <div class="results-panel-header">
+                <h2>Панель тестирования</h2>
 
-        <!-- Metrics Configuration Component -->
-        {% include 'components/metrics_configuration.html' %}
+                <div class="results-selection-summary">
+                    <div class="selection-group">
+                        <h3>
+                            <i class="fas fa-cubes"></i>
+                            Выбранные модели
+                            <span class="count-badge" id="selectedModelsCount">0</span>
+                        </h3>
+                        <div class="selected-models-list" id="selectedModelsList">
+                            <p class="empty-selection">Модели не выбраны</p>
+                        </div>
+                    </div>
 
-        <button class="run-button" id="runBenchmarkBtn">
-            Запустить тестирование
-        </button>
-    </div>
+                    <div class="selection-group">
+                        <h3>
+                            <i class="fas fa-tasks"></i>
+                            Выбранные тесты
+                            <span class="count-badge" id="selectedBenchmarksCount">0</span>
+                        </h3>
+                        <div class="selected-benchmarks-list" id="selectedBenchmarksList">
+                            <p class="empty-selection">Тесты не выбраны</p>
+                        </div>
+                    </div>
+                </div>
 
-    <div class="results-panel">
-        <div id="resultsContainer">
-            <div class="empty-results">
-                <p>Выберите модели и тесты, затем запустите для просмотра результатов</p>
+                <div class="results-selection-summary">
+                    <div class="selection-group">
+                        <h3>
+                            <i class="fas fa-table"></i>
+                            Выбранные датасеты
+                            <span class="count-badge" id="selectedDatasetsCount">0</span>
+                        </h3>
+                        <div class="selected-datasets-list" id="selectedDatasetsList">
+                            <p class="empty-selection">Датасеты не выбраны</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="run-controls">
+                    <button class="btn btn-primary" id="runBenchmarkBtn">
+                        <i class="fas fa-play"></i>
+                        Запустить тестирование
+                    </button>
+                </div>
+            </div>
+
+            <div id="resultsContainer">
+                <div class="empty-results">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Готовы к тестированию</h3>
+                    <p>Выберите модели, тесты и датасеты, затем запустите тестирование для просмотра результатов</p>
+                </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/modelComparison.js') }}"></script>
-<script src="{{ url_for('static', filename='js/benchmarkSelector.js') }}"></script>
-<script src="{{ url_for('static', filename='js/metricsConfiguration.js') }}"></script>
-<script src="{{ url_for('static', filename='js/resultsVisualization.js') }}"></script>
-<script>
-    // Component toggle functionality
-    function toggleComponent(componentName) {
-        const content = document.getElementById(`${componentName}Content`);
-        const toggle = document.getElementById(`${componentName}Toggle`);
+    <script src="{{ url_for('static', filename='js/modelComparison.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/benchmarkSelector.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/metricsConfiguration.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/resultsVisualization.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/datasetSelector.js') }}"></script>
+    <script>
+        let metricsComparisonData = null;
 
-        if (content && toggle) {
-            content.classList.toggle('collapsed');
-            toggle.classList.toggle('collapsed');
-        } else {
-            console.error(`Could not find elements for ${componentName}`);
-        }
-    }
+        function toggleComponent(componentName) {
+            const content = document.getElementById(`${componentName}Content`);
+            const toggle = document.getElementById(`${componentName}Toggle`);
 
-    // Initialize application
-    // в скрипте в конце файла
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize components
-        initModelComparison();
-        initBenchmarkSelector();
-        initMetricsConfiguration();
-
-        // Run benchmark button event listener
-        // Модифицируем обработчик события нажатия на кнопку в index.html
-        document.getElementById('runBenchmarkBtn').addEventListener('click', function() {
-            const selectedModelIds = getSelectedModels();
-            const selectedBenchmarks = getSelectedBenchmarks();
-            const metrics = getMetricsConfiguration();
-
-            if (selectedModelIds.length === 0 || selectedBenchmarks.length === 0) {
-                alert('Пожалуйста, выберите хотя бы одну модель и один тест');
-                return;
+            if (content && toggle) {
+                content.classList.toggle('collapsed');
+                toggle.classList.toggle('collapsed');
+            } else {
+                console.error(`Could not find elements for ${componentName}`);
             }
+        }
 
-            // Get full model objects for compatibility check
-            const selectedModels = selectedModelIds.map(id => {
-                return availableModels.find(m => m.id === id);
+        function showNotification(message, type = 'error', title = null) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+
+            const headerTitle = title || (type === 'error' ? 'Ошибка' : 'Уведомление');
+
+            notification.innerHTML = `
+            <div class="notification-header">
+                <strong>${headerTitle}</strong>
+                <button class="notification-close">&times;</button>
+            </div>
+            <div class="notification-body">${message}</div>
+        `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => notification.classList.add('show'), 10);
+
+            notification.querySelector('.notification-close').addEventListener('click', () => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
             });
 
-            // Check compatibility
-            const compatibility = checkModelBenchmarkCompatibility(selectedModels, selectedBenchmarks);
-            if (!compatibility.compatible) {
-                alert(compatibility.message);
-                return;
-            } else if (compatibility.message) {
-                // Если есть сообщение, но совместимость не нарушена (например, предупреждение)
-                if (confirm(compatibility.message + "\n\nПродолжить?")) {
-                    // Продолжаем выполнение
-                } else {
-                    return; // Пользователь отменил
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 300);
                 }
+            }, 5000);
+        }
+
+        function checkJudgeModel() {
+            return fetch('/api/judge-model')
+                .then(response => response.json())
+                .then(judgeModel => {
+                    return judgeModel && judgeModel.id;
+                })
+                .catch(error => {
+                    console.error('Error checking judge model:', error);
+                    return false;
+                });
+        }
+
+        function runBenchmarkExecution(selectedModelIds, selectedBenchmarks, selectedDatasets, metrics, selectedModels) {
+            const compatibility = checkModelBenchmarkCompatibility(selectedModels, selectedBenchmarks, selectedDatasets);
+            if (!compatibility.compatible) {
+                showNotification(compatibility.message, 'error', 'Ошибка конфигурации');
+                return;
             }
 
-            // Плавная прокрутка страницы вверх
             window.scrollTo({
                 top: 0,
                 behavior: 'smooth'
             });
 
-            // Если пользователь выбрал blind_test или gpt4o_eval, автоматически убираем все остальные
-            let benchmarksToSend = selectedBenchmarks;
-            if ((selectedBenchmarks.includes('blind_test') || selectedBenchmarks.includes('gpt4o_eval')) && selectedBenchmarks.length > 1) {
-                if (selectedBenchmarks.includes('blind_test')) {
-                    benchmarksToSend = ['blind_test'];
-                } else {
-                    benchmarksToSend = ['gpt4o_eval'];
-                }
-            }
-
-            // Show loading state
             document.getElementById('resultsContainer').innerHTML = `
-                <div class="loading">
-                    <div class="loading-spinner"></div>
-                    <div class="loading-text">Выполнение тестирования</div>
-                    <div class="loading-details">Обработка моделей и вычисление метрик</div>
-                    <div class="loading-progress">
-                        <div class="loading-progress-bar"></div>
-                    </div>
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Выполнение тестирования</div>
+                <div class="loading-details">Обработка моделей и вычисление метрик</div>
+                <div class="loading-progress">
+                    <div class="loading-progress-bar"></div>
                 </div>
-            `;
+            </div>
+        `;
 
-            // Run benchmark API call
+            const requestData = {
+                selectedModels: selectedModelIds,
+                selectedBenchmarks: selectedBenchmarks,
+                selectedDatasets: selectedDatasets,
+                metrics: metrics
+            };
+
             fetch('/api/run-benchmark', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    selectedModels: selectedModelIds,
-                    selectedBenchmarks: benchmarksToSend,
-                    metrics
-                }),
+                body: JSON.stringify(requestData),
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Ошибка HTTP! Статус: ${response.status}`);
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.error || `HTTP Error ${response.status}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(results => {
+                    if (results.error) {
+                        throw new Error(results.error);
+                    }
+                    renderResultsVisualization(results, metrics);
+                })
+                .catch(error => {
+                    console.error('Ошибка при выполнении тестирования:', error);
+
+                    let errorMessage = error.message;
+
+                    if (errorMessage.includes('модель-судья') || errorMessage.includes('judge')) {
+                        errorMessage = 'Для выбранных тестов необходимо настроить модель-судью в разделе "Настройки"';
+                    } else if (errorMessage.includes('HTTP Error 400')) {
+                        errorMessage = 'Ошибка конфигурации тестирования. Проверьте выбранные модели и настройки.';
+                    } else if (errorMessage.includes('HTTP Error')) {
+                        errorMessage = 'Ошибка сервера при выполнении тестирования. Попробуйте позже.';
+                    }
+
+                    document.getElementById('resultsContainer').innerHTML =
+                        `<div class="error">
+                        <div style="display: flex; align-items: center; gap: 12px; color: var(--danger-color); font-weight: 600; margin-bottom: 12px;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Ошибка при выполнении тестирования</span>
+                        </div>
+                        <p style="color: var(--text-secondary); margin: 0;">${errorMessage}</p>
+                    </div>`;
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initModelComparison();
+            initBenchmarkSelector();
+            initDatasetSelector();
+            initMetricsConfiguration();
+
+            document.getElementById('runBenchmarkBtn').addEventListener('click', function () {
+                const selectedModelIds = getSelectedModels();
+                const selectedBenchmarks = getSelectedBenchmarks();
+                const selectedDatasets = getSelectedDatasets();
+                const metrics = getMetricsConfiguration();
+
+                if (selectedModelIds.length === 0 || selectedBenchmarks.length === 0) {
+                    showNotification('Пожалуйста, выберите хотя бы одну модель и один тест', 'error', 'Неполная конфигурация');
+                    return;
                 }
-                return response.json();
-            })
-            .then(results => {
-                if (results.error) {
-                    throw new Error(results.error);
+
+                if (selectedDatasets.length === 0) {
+                    showNotification('Пожалуйста, выберите хотя бы один датасет для проведения тестирования', 'error', 'Датасеты не выбраны');
+                    return;
                 }
-                // Render results visualization
-                renderResultsVisualization(results, metrics);
-            })
-            .catch(error => {
-                console.error('Ошибка при выполнении тестирования:', error);
-                document.getElementById('resultsContainer').innerHTML =
-                    `<div class="error">Ошибка при выполнении тестирования: ${error.message}</div>`;
+
+                const selectedModels = selectedModelIds.map(id => {
+                    return availableModels.find(m => m.id === id);
+                });
+
+                const requiresJudgeModel = selectedBenchmarks.some(benchmark =>
+                    benchmark === 'judge_eval' || benchmark === 'reference_comparison'
+                );
+
+                if (requiresJudgeModel) {
+                    checkJudgeModel()
+                        .then(hasJudge => {
+                            if (!hasJudge) {
+                                showNotification('Для выбранных тестов необходимо настроить модель-судью в разделе "Настройки"', 'error', 'Модель-судья не настроена');
+                                return;
+                            }
+                            runBenchmarkExecution(selectedModelIds, selectedBenchmarks, selectedDatasets, metrics, selectedModels);
+                        })
+                        .catch(error => {
+                            showNotification('Ошибка при проверке модели-судьи. Пожалуйста, проверьте настройки.', 'error', 'Ошибка проверки');
+                            console.error('Judge model check error:', error);
+                        });
+                } else {
+                    runBenchmarkExecution(selectedModelIds, selectedBenchmarks, selectedDatasets, metrics, selectedModels);
+                }
             });
         });
-    });
-</script>
+    </script>
 {% endblock %}
