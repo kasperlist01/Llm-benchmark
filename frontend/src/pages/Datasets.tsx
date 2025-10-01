@@ -14,6 +14,7 @@ const Datasets: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [showWebModal, setShowWebModal] = useState(false);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [editingDataset, setEditingDataset] = useState<UserDataset | null>(null);
   const [form] = Form.useForm();
   const [webForm] = Form.useForm();
 
@@ -34,25 +35,38 @@ const Datasets: React.FC = () => {
   };
 
   const handleSubmit = async (values: any) => {
-    if (fileList.length === 0) {
-      message.error('Пожалуйста, выберите CSV файл');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('name', values.name);
-    formData.append('description', values.description || '');
-    formData.append('csv_file', fileList[0].originFileObj as File);
-
     try {
-      await datasetsAPI.addDataset(formData);
-      message.success('Датасет успешно загружен!');
+      if (editingDataset) {
+        // Редактирование существующего датасета
+        const datasetIdNum = parseInt(editingDataset.id.replace('dataset_', ''));
+        await datasetsAPI.updateDataset(datasetIdNum, {
+          name: values.name,
+          description: values.description || '',
+        });
+        message.success('Датасет успешно обновлен!');
+      } else {
+        // Добавление нового датасета
+        if (fileList.length === 0) {
+          message.error('Пожалуйста, выберите CSV файл');
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('name', values.name);
+        formData.append('description', values.description || '');
+        formData.append('csv_file', fileList[0].originFileObj as File);
+
+        await datasetsAPI.addDataset(formData);
+        message.success('Датасет успешно загружен!');
+      }
+      
       setShowModal(false);
+      setEditingDataset(null);
       form.resetFields();
       setFileList([]);
       loadData();
     } catch (error: any) {
-      message.error(error.response?.data?.error || 'Ошибка при загрузке датасета');
+      message.error(error.response?.data?.error || 'Ошибка при сохранении датасета');
     }
   };
 
@@ -141,10 +155,10 @@ const Datasets: React.FC = () => {
             {datasets.map((dataset) => {
               const datasetIdNum = parseInt(dataset.id.replace('dataset_', ''));
               return (
-                <Col xs={24} sm={12} md={8} lg={6} key={dataset.id}>
+                <Col xs={24} sm={12} md={8} key={dataset.id}>
                   <Card
                     hoverable
-                    style={{ height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+                    style={{ height: '100%', minHeight: '320px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
                   >
                     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -195,14 +209,30 @@ const Datasets: React.FC = () => {
                         </Space>
                       </div>
 
-                      <Button
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleDelete(datasetIdNum)}
-                        block
-                      >
-                        Удалить
-                      </Button>
+                      <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                        <Button
+                          icon={<EditOutlined />}
+                          onClick={() => {
+                            form.setFieldsValue({
+                              name: dataset.name,
+                              description: dataset.description || '',
+                            });
+                            setEditingDataset(dataset);
+                            setShowModal(true);
+                          }}
+                          block
+                        >
+                          Редактировать
+                        </Button>
+                        <Button
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => handleDelete(datasetIdNum)}
+                          block
+                        >
+                          Удалить
+                        </Button>
+                      </Space>
                     </Space>
                   </Card>
                 </Col>
@@ -243,10 +273,11 @@ const Datasets: React.FC = () => {
       </Space>
 
       <Modal
-        title="Добавить датасет"
+        title={editingDataset ? 'Редактировать датасет' : 'Добавить датасет'}
         open={showModal}
         onCancel={() => {
           setShowModal(false);
+          setEditingDataset(null);
           form.resetFields();
           setFileList([]);
         }}
@@ -266,35 +297,38 @@ const Datasets: React.FC = () => {
             <TextArea rows={3} placeholder="Краткое описание датасета" />
           </Form.Item>
 
-          <Form.Item
-            label="CSV файл"
-            required
-            extra="Загрузите CSV файл с колонками для prompts и reference answers"
-          >
-            <Upload
-              maxCount={1}
-              fileList={fileList}
-              onChange={({ fileList }) => setFileList(fileList)}
-              beforeUpload={() => false}
-              accept=".csv"
+          {!editingDataset && (
+            <Form.Item
+              label="CSV файл"
+              required
+              extra="Загрузите CSV файл с колонками для prompts и reference answers"
             >
-              <Button icon={<UploadOutlined />} size="large" block>
-                Выбрать файл
-              </Button>
-            </Upload>
-          </Form.Item>
+              <Upload
+                maxCount={1}
+                fileList={fileList}
+                onChange={({ fileList }) => setFileList(fileList)}
+                beforeUpload={() => false}
+                accept=".csv"
+              >
+                <Button icon={<UploadOutlined />} size="large" block>
+                  Выбрать файл
+                </Button>
+              </Upload>
+            </Form.Item>
+          )}
 
           <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
             <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
               <Button onClick={() => {
                 setShowModal(false);
+                setEditingDataset(null);
                 form.resetFields();
                 setFileList([]);
               }}>
                 Отмена
               </Button>
               <Button type="primary" htmlType="submit">
-                Загрузить датасет
+                {editingDataset ? 'Сохранить' : 'Загрузить датасет'}
               </Button>
             </Space>
           </Form.Item>

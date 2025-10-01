@@ -40,15 +40,29 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
     container_name: llm-benchmark-frontend
     ports:
-      - "3000:80"
+      - "3000:3000"
+    volumes:
+      # Монтируем исходный код для hot reload
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/package.json:/app/package.json
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      # Исключаем node_modules из монтирования (используем версию из контейнера)
+      - /app/node_modules
     environment:
       - REACT_APP_API_URL=http://localhost:5001
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
     depends_on:
       - web
     restart: unless-stopped
+    stdin_open: true
+    tty: true
 
 volumes:
   postgres_data:

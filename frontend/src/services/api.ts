@@ -89,6 +89,11 @@ export const modelsAPI = {
     return response.data;
   },
 
+  updateModel: async (modelId: number, data: any): Promise<UserModel> => {
+    const response = await api.post(`/user/models/update/${modelId}`, data);
+    return response.data;
+  },
+
   deleteModel: async (modelId: number): Promise<void> => {
     await api.post(`/user/models/delete/${modelId}`);
   },
@@ -129,6 +134,11 @@ export const datasetsAPI = {
 
   addDatasetFromWeb: async (data: { name: string; description: string; rows: Array<{prompt: string; reference: string}> }): Promise<UserDataset> => {
     const response = await api.post('/user/datasets/add-from-web', data);
+    return response.data;
+  },
+
+  updateDataset: async (datasetId: number, data: { name: string; description: string }): Promise<UserDataset> => {
+    const response = await api.post(`/user/datasets/update/${datasetId}`, data);
     return response.data;
   },
 };

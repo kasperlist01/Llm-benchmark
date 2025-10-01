@@ -1,0 +1,18 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Копируем package.json и package-lock.json
+COPY package*.json ./
+
+# Устанавливаем зависимости
+RUN npm install
+
+# Копируем остальные файлы (в development они будут монтироваться как volume)
+COPY . .
+
+# Открываем порт для dev сервера
+EXPOSE 3000
+
+# Запускаем dev сервер с hot reload
+CMD ["npm", "start"]

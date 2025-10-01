@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Button, Typography, Space, Badge, Empty, Spin, Modal, Form, Input, Select, message, Row, Col, Tag } from 'antd';
-import { PlusOutlined, DeleteOutlined, ExperimentOutlined, ApiOutlined, CheckCircleOutlined, WarningOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, ExperimentOutlined, ApiOutlined, CheckCircleOutlined, WarningOutlined, EditOutlined } from '@ant-design/icons';
 import { modelsAPI, settingsAPI } from '../services/api';
 import { UserModel, APIIntegration } from '../types';
 
@@ -14,6 +14,7 @@ const Models: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [judgeModelId, setJudgeModelId] = useState<number | null>(null);
   const [testingModel, setTestingModel] = useState<number | null>(null);
+  const [editingModel, setEditingModel] = useState<UserModel | null>(null);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -47,13 +48,20 @@ const Models: React.FC = () => {
     };
 
     try {
-      await modelsAPI.addModel(dataToSend);
-      message.success('Модель успешно добавлена!');
+      if (editingModel) {
+        const modelIdNum = parseInt(editingModel.id.replace('custom_', ''));
+        await modelsAPI.updateModel(modelIdNum, dataToSend);
+        message.success('Модель успешно обновлена!');
+      } else {
+        await modelsAPI.addModel(dataToSend);
+        message.success('Модель успешно добавлена!');
+      }
       setShowModal(false);
+      setEditingModel(null);
       form.resetFields();
       loadData();
     } catch (error: any) {
-      message.error(error.response?.data?.error || 'Ошибка при добавлении модели');
+      message.error(error.response?.data?.error || 'Ошибка при сохранении модели');
     }
   };
 
@@ -130,10 +138,10 @@ const Models: React.FC = () => {
               const modelIdNum = parseInt(model.id.replace('custom_', ''));
               const isJudge = judgeModelId === modelIdNum;
               return (
-                <Col xs={24} sm={12} md={8} lg={6} key={model.id}>
+                <Col xs={24} sm={12} md={8} key={model.id}>
                   <Card
                     hoverable
-                    style={{ height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+                    style={{ height: '100%', minHeight: '320px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
                   >
                     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -211,25 +219,41 @@ const Models: React.FC = () => {
                         </div>
                       )}
 
-                      <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-                        {model.api_integration ? (
+                      <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                        <Space style={{ width: '100%' }}>
+                          {model.api_integration ? (
+                            <Button
+                              type="default"
+                              icon={<ExperimentOutlined />}
+                              onClick={() => handleTestModel(modelIdNum)}
+                              loading={testingModel === modelIdNum}
+                              style={{ flex: 1 }}
+                            >
+                              Тест
+                            </Button>
+                          ) : null}
                           <Button
-                            type="default"
-                            icon={<ExperimentOutlined />}
-                            onClick={() => handleTestModel(modelIdNum)}
-                            loading={testingModel === modelIdNum}
+                            icon={<EditOutlined />}
+                            onClick={() => {
+                              form.setFieldsValue({
+                                name: model.name,
+                                description: model.description,
+                                color: model.color,
+                                api_integration_id: model.api_integration?.id,
+                              });
+                              setEditingModel(model);
+                              setShowModal(true);
+                            }}
+                            style={{ flex: 1 }}
                           >
-                            Проверить
+                            Изменить
                           </Button>
-                        ) : (
-                          <Button type="default" disabled icon={<WarningOutlined />}>
-                            Нет API
-                          </Button>
-                        )}
+                        </Space>
                         <Button
                           danger
                           icon={<DeleteOutlined />}
                           onClick={() => handleDelete(modelIdNum)}
+                          block
                         >
                           Удалить
                         </Button>
@@ -266,10 +290,11 @@ const Models: React.FC = () => {
       </Space>
 
       <Modal
-        title="Добавить пользовательскую модель"
+        title={editingModel ? 'Редактировать модель' : 'Добавить пользовательскую модель'}
         open={showModal}
         onCancel={() => {
           setShowModal(false);
+          setEditingModel(null);
           form.resetFields();
         }}
         footer={null}
@@ -331,12 +356,13 @@ const Models: React.FC = () => {
             <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
               <Button onClick={() => {
                 setShowModal(false);
+                setEditingModel(null);
                 form.resetFields();
               }}>
                 Отмена
               </Button>
               <Button type="primary" htmlType="submit">
-                Добавить модель
+                {editingModel ? 'Сохранить' : 'Добавить модель'}
               </Button>
             </Space>
           </Form.Item>
