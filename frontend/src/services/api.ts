@@ -165,13 +165,13 @@ export const datasetsAPI = {
 // Settings API
 export const settingsAPI = {
   getSettings: async (): Promise<UserSettings> => {
-    // Return mock data since there's no specific endpoint
-    return { id: 1, user_id: 1, judge_model_id: null };
+    const response = await api.get('/user/api/settings');
+    return response.data;
   },
 
   updateSettings: async (data: any): Promise<UserSettings> => {
-    const response = await api.post('/user/judge-model/save', data);
-    return response.data;
+    const response = await api.post('/user/api/settings/update', data);
+    return response.data.settings;
   },
 
   getIntegrations: async (): Promise<APIIntegration[]> => {

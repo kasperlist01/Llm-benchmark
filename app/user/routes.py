@@ -321,6 +321,45 @@ def delete_api_integration(integration_id):
     return redirect(url_for('user.settings'))
 
 
+@user_bp.route('/api/settings', methods=['GET'])
+@login_required
+def get_settings_api():
+    """Get user settings as JSON"""
+    user_settings = current_user.get_or_create_settings()
+    return jsonify({
+        'id': user_settings.id,
+        'user_id': user_settings.user_id,
+        'judge_model_id': user_settings.judge_model_id
+    })
+
+
+@user_bp.route('/api/settings/update', methods=['POST'])
+@login_required
+def update_settings_api():
+    """Update user settings from JSON"""
+    try:
+        data = request.json
+        user_settings = current_user.get_or_create_settings()
+        
+        if 'judge_model_id' in data:
+            user_settings.judge_model_id = data['judge_model_id']
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Настройки успешно обновлены!',
+            'settings': {
+                'id': user_settings.id,
+                'user_id': user_settings.user_id,
+                'judge_model_id': user_settings.judge_model_id
+            }
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Ошибка при обновлении настроек: {str(e)}'}), 500
+
+
 @user_bp.route('/judge-model/save', methods=['POST'])
 @login_required
 def save_judge_model():

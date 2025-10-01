@@ -197,7 +197,16 @@ const Datasets: React.FC = () => {
                 <Col xs={24} sm={12} md={8} key={dataset.id}>
                   <Card
                     hoverable
-                    style={{ height: '100%', minHeight: '320px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', cursor: 'pointer' }}
+                    style={{ 
+                      height: '100%', 
+                      minHeight: '280px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                      cursor: 'pointer',
+                    }}
+                    bodyStyle={{
+                      height: '100%',
+                      padding: '24px',
+                    }}
                     onClick={async () => {
                       setEditingDataset(dataset);
                       setLoadingData(true);
@@ -213,104 +222,143 @@ const Datasets: React.FC = () => {
                       }
                     }}
                   >
-                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                        <div
-                          style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: '8px',
-                            backgroundColor: '#52c41a',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#fff',
-                            fontSize: 18,
-                            fontWeight: 'bold',
-                            flexShrink: 0,
-                          }}
-                        >
-                          <DatabaseOutlined />
+                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                      {/* Header */}
+                      <div style={{ marginBottom: 20 }}>
+                        <div style={{ 
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 56,
+                          height: 56,
+                          background: '#1890ff',
+                          borderRadius: '16px',
+                          marginBottom: 16,
+                        }}>
+                          <DatabaseOutlined style={{ fontSize: 28, color: '#fff' }} />
                         </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <Text strong style={{ fontSize: 16 }}>{dataset.name}</Text>
-                          {dataset.description && (
-                            <div style={{ marginTop: 4 }}>
-                              <Text 
-                                type="secondary" 
-                                style={{ 
-                                  fontSize: 13,
-                                  display: '-webkit-box',
-                                  WebkitLineClamp: 2,
-                                  WebkitBoxOrient: 'vertical',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                }}
-                              >
-                                {dataset.description}
-                              </Text>
-                            </div>
-                          )}
-                        </div>
+                        <Title level={4} style={{ margin: 0, marginBottom: 8, fontSize: 18 }}>
+                          {dataset.name}
+                        </Title>
+                        {dataset.description && (
+                          <Text 
+                            type="secondary"
+                            style={{ 
+                              fontSize: 13,
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              lineHeight: 1.6
+                            }}
+                          >
+                            {dataset.description}
+                          </Text>
+                        )}
                       </div>
 
+                      {/* Stats Badge */}
                       <div style={{ 
-                        padding: '12px', 
-                        backgroundColor: '#f5f5f5', 
-                        borderRadius: '6px' 
+                        background: '#f5f5f5',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        marginBottom: 16,
                       }}>
-                        <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                          <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                            <Text type="secondary" style={{ fontSize: 12 }}>Вопросов:</Text>
-                            <Text strong>{dataset.row_count || 'N/A'}</Text>
-                          </Space>
-                          {dataset.file_path && (
-                            <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                              <Text type="secondary" style={{ fontSize: 12 }}>Файл:</Text>
-                              <Text style={{ fontSize: 12 }} ellipsis>
-                                {dataset.file_path.split('/').pop()}
-                              </Text>
-                            </Space>
-                          )}
-                        </Space>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                          <Text strong style={{ fontSize: 15 }}>Записей в датасете</Text>
+                          <div style={{
+                            background: '#1890ff',
+                            color: '#fff',
+                            padding: '6px 16px',
+                            borderRadius: '20px',
+                            fontWeight: 'bold',
+                            fontSize: 16,
+                          }}>
+                            {dataset.row_count || 0}
+                          </div>
+                        </div>
+                        {dataset.file_path && (
+                          <div style={{ 
+                            paddingTop: 10, 
+                            borderTop: '1px solid #f0f0f0',
+                          }}>
+                            <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 4 }}>
+                              Источник:
+                            </Text>
+                            <Text style={{ fontSize: 12, color: '#666', wordBreak: 'break-all' }}>
+                              {dataset.file_path.split('/').pop()}
+                            </Text>
+                          </div>
+                        )}
                       </div>
 
-                      <Space style={{ width: '100%' }}>
-                        <Button
-                          icon={<EditOutlined />}
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            setEditingDataset(dataset);
-                            setLoadingData(true);
-                            setShowEditDataModal(true);
-                            try {
-                              const result = await datasetsAPI.getDatasetData(datasetIdNum);
-                              setDatasetData(result.data);
-                              editDataForm.setFieldsValue({ rows: result.data });
-                            } catch (error: any) {
-                              message.error(error.response?.data?.error || 'Ошибка загрузки данных');
-                              setShowEditDataModal(false);
-                            } finally {
-                              setLoadingData(false);
-                            }
-                          }}
-                          style={{ flex: 1 }}
-                        >
-                          Изменить
-                        </Button>
-                        <Button
-                          danger
-                          icon={<DeleteOutlined />}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(datasetIdNum);
-                          }}
-                          style={{ flex: 1 }}
-                        >
-                          Удалить
-                        </Button>
-                      </Space>
-                    </Space>
+                      {/* Action buttons */}
+                      <div style={{ marginTop: 'auto' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 40px', gap: 8 }}>
+                          <Button
+                            icon={<EyeOutlined />}
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              setEditingDataset(dataset);
+                              setLoadingData(true);
+                              setShowViewModal(true);
+                              try {
+                                const result = await datasetsAPI.getDatasetData(datasetIdNum);
+                                setDatasetData(result.data);
+                              } catch (error: any) {
+                                message.error(error.response?.data?.error || 'Ошибка загрузки данных');
+                                setShowViewModal(false);
+                              } finally {
+                                setLoadingData(false);
+                              }
+                            }}
+                            style={{ 
+                              flex: 1,
+                              height: 40
+                            }}
+                          >
+                            Открыть
+                          </Button>
+                          <Button
+                            icon={<EditOutlined />}
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              setEditingDataset(dataset);
+                              setLoadingData(true);
+                              setShowEditDataModal(true);
+                              try {
+                                const result = await datasetsAPI.getDatasetData(datasetIdNum);
+                                setDatasetData(result.data);
+                                editDataForm.setFieldsValue({ rows: result.data });
+                              } catch (error: any) {
+                                message.error(error.response?.data?.error || 'Ошибка загрузки данных');
+                                setShowEditDataModal(false);
+                              } finally {
+                                setLoadingData(false);
+                              }
+                            }}
+                            style={{ 
+                              flex: 1,
+                              height: 40
+                            }}
+                          >
+                            Изменить
+                          </Button>
+                          <Button
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(datasetIdNum);
+                            }}
+                            style={{ 
+                              height: 40
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </Card>
                 </Col>
               );
