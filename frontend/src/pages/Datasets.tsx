@@ -13,10 +13,14 @@ const Datasets: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showWebModal, setShowWebModal] = useState(false);
+  const [showEditDataModal, setShowEditDataModal] = useState(false);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [editingDataset, setEditingDataset] = useState<UserDataset | null>(null);
+  const [datasetData, setDatasetData] = useState<Array<{prompt: string; reference: string}>>([]);
+  const [loadingData, setLoadingData] = useState(false);
   const [form] = Form.useForm();
   const [webForm] = Form.useForm();
+  const [editDataForm] = Form.useForm();
 
   useEffect(() => {
     loadData();
@@ -39,11 +43,22 @@ const Datasets: React.FC = () => {
       if (editingDataset) {
         // Редактирование существующего датасета
         const datasetIdNum = parseInt(editingDataset.id.replace('dataset_', ''));
+        
+        // Обновляем имя и описание
         await datasetsAPI.updateDataset(datasetIdNum, {
           name: values.name,
           description: values.description || '',
         });
-        message.success('Датасет успешно обновлен!');
+
+        // Если выбран новый файл, обновляем содержимое
+        if (fileList.length > 0) {
+          const formData = new FormData();
+          formData.append('csv_file', fileList[0].originFileObj as File);
+          await datasetsAPI.updateDatasetContent(datasetIdNum, formData);
+          message.success('Датасет и его содержимое успешно обновлены!');
+        } else {
+          message.success('Датасет успешно обновлен!');
+        }
       } else {
         // Добавление нового датасета
         if (fileList.length === 0) {
@@ -109,6 +124,29 @@ const Datasets: React.FC = () => {
       loadData();
     } catch (error: any) {
       message.error(error.response?.data?.error || 'Ошибка при создании датасета');
+    }
+  };
+
+  const handleEditDataSubmit = async (values: any) => {
+    if (!editingDataset) return;
+
+    const validRows = values.rows.filter((row: any) => row?.prompt?.trim() || row?.reference?.trim());
+    
+    if (validRows.length === 0) {
+      message.error('Датасет должен содержать хотя бы одну строку с данными');
+      return;
+    }
+
+    try {
+      const datasetIdNum = parseInt(editingDataset.id.replace('dataset_', ''));
+      await datasetsAPI.saveDatasetData(datasetIdNum, validRows);
+      message.success('Данные датасета успешно обновлены!');
+      setShowEditDataModal(false);
+      setEditingDataset(null);
+      editDataForm.resetFields();
+      loadData();
+    } catch (error: any) {
+      message.error(error.response?.data?.error || 'Ошибка при сохранении данных');
     }
   };
 
@@ -210,20 +248,44 @@ const Datasets: React.FC = () => {
                       </div>
 
                       <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                        <Button
-                          icon={<EditOutlined />}
-                          onClick={() => {
-                            form.setFieldsValue({
-                              name: dataset.name,
-                              description: dataset.description || '',
-                            });
-                            setEditingDataset(dataset);
-                            setShowModal(true);
-                          }}
-                          block
-                        >
-                          Редактировать
-                        </Button>
+                        <Space style={{ width: '100%' }}>
+                          <Button
+                            icon={<EditOutlined />}
+                            onClick={() => {
+                              form.setFieldsValue({
+                                name: dataset.name,
+                                description: dataset.description || '',
+                              });
+                              setEditingDataset(dataset);
+                              setShowModal(true);
+                            }}
+                            style={{ flex: 1 }}
+                          >
+                            Изменить
+                          </Button>
+                          <Button
+                            type="default"
+                            icon={<DatabaseOutlined />}
+                            onClick={async () => {
+                              setEditingDataset(dataset);
+                              setLoadingData(true);
+                              setShowEditDataModal(true);
+                              try {
+                                const result = await datasetsAPI.getDatasetData(datasetIdNum);
+                                setDatasetData(result.data);
+                                editDataForm.setFieldsValue({ rows: result.data });
+                              } catch (error: any) {
+                                message.error(error.response?.data?.error || 'Ошибка загрузки данных');
+                                setShowEditDataModal(false);
+                              } finally {
+                                setLoadingData(false);
+                              }
+                            }}
+                            style={{ flex: 1 }}
+                          >
+                            Данные
+                          </Button>
+                        </Space>
                         <Button
                           danger
                           icon={<DeleteOutlined />}
@@ -297,25 +359,26 @@ const Datasets: React.FC = () => {
             <TextArea rows={3} placeholder="Краткое описание датасета" />
           </Form.Item>
 
-          {!editingDataset && (
-            <Form.Item
-              label="CSV файл"
-              required
-              extra="Загрузите CSV файл с колонками для prompts и reference answers"
+          <Form.Item
+            label={editingDataset ? "Новый CSV файл (опционально)" : "CSV файл"}
+            required={!editingDataset}
+            extra={editingDataset 
+              ? "Загрузите новый CSV файл для замены содержимого датасета (оставьте пустым, чтобы сохранить текущее содержимое)"
+              : "Загрузите CSV файл с колонками для prompts и reference answers"
+            }
+          >
+            <Upload
+              maxCount={1}
+              fileList={fileList}
+              onChange={({ fileList }) => setFileList(fileList)}
+              beforeUpload={() => false}
+              accept=".csv"
             >
-              <Upload
-                maxCount={1}
-                fileList={fileList}
-                onChange={({ fileList }) => setFileList(fileList)}
-                beforeUpload={() => false}
-                accept=".csv"
-              >
-                <Button icon={<UploadOutlined />} size="large" block>
-                  Выбрать файл
-                </Button>
-              </Upload>
-            </Form.Item>
-          )}
+              <Button icon={<UploadOutlined />} size="large" block>
+                {editingDataset ? 'Выбрать новый файл (опционально)' : 'Выбрать файл'}
+              </Button>
+            </Upload>
+          </Form.Item>
 
           <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
             <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
@@ -431,6 +494,100 @@ const Datasets: React.FC = () => {
             </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title={`Редактировать данные: ${editingDataset?.name || ''}`}
+        open={showEditDataModal}
+        onCancel={() => {
+          setShowEditDataModal(false);
+          setEditingDataset(null);
+          editDataForm.resetFields();
+        }}
+        footer={null}
+        width={900}
+      >
+        {loadingData ? (
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <Spin size="large" />
+            <div style={{ marginTop: 16 }}>
+              <Text>Загрузка данных...</Text>
+            </div>
+          </div>
+        ) : (
+          <Form
+            form={editDataForm}
+            layout="vertical"
+            onFinish={handleEditDataSubmit}
+          >
+            <Form.Item label={`Данные датасета (${datasetData.length} строк)`}>
+              <Form.List name="rows">
+                {(fields, { add, remove }) => (
+                  <>
+                    {fields.map((field, index) => (
+                      <Card
+                        key={field.key}
+                        size="small"
+                        style={{ marginBottom: 12 }}
+                        title={`Строка ${index + 1}`}
+                        extra={
+                          <Button
+                            type="text"
+                            danger
+                            icon={<MinusCircleOutlined />}
+                            onClick={() => remove(field.name)}
+                          >
+                            Удалить
+                          </Button>
+                        }
+                      >
+                        <Form.Item
+                          {...field}
+                          name={[field.name, 'prompt']}
+                          label="Prompt (запрос)"
+                          style={{ marginBottom: 12 }}
+                        >
+                          <TextArea rows={2} placeholder="Введите запрос..." />
+                        </Form.Item>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, 'reference']}
+                          label="Reference (эталон)"
+                          style={{ marginBottom: 0 }}
+                        >
+                          <TextArea rows={2} placeholder="Введите эталонный ответ..." />
+                        </Form.Item>
+                      </Card>
+                    ))}
+                    <Button
+                      type="dashed"
+                      onClick={() => add()}
+                      icon={<PlusOutlined />}
+                      block
+                    >
+                      Добавить строку
+                    </Button>
+                  </>
+                )}
+              </Form.List>
+            </Form.Item>
+
+            <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+              <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+                <Button onClick={() => {
+                  setShowEditDataModal(false);
+                  setEditingDataset(null);
+                  editDataForm.resetFields();
+                }}>
+                  Отмена
+                </Button>
+                <Button type="primary" htmlType="submit">
+                  Сохранить изменения
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        )}
       </Modal>
     </div>
   );

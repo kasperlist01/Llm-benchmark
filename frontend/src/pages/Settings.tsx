@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Button, Typography, Space, Spin, Modal, Form, Input, Select, Avatar, List, Divider, message, Row, Col } from 'antd';
-import { UserOutlined, LockOutlined, KeyOutlined, ApiOutlined, DeleteOutlined, PlusOutlined, SaveOutlined, SafetyOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined, KeyOutlined, ApiOutlined, DeleteOutlined, PlusOutlined, SaveOutlined, SafetyOutlined, EditOutlined } from '@ant-design/icons';
 import { settingsAPI, modelsAPI } from '../services/api';
 import { APIIntegration, UserModel } from '../types';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,6 +14,7 @@ const Settings: React.FC = () => {
   const [models, setModels] = useState<UserModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [showApiModal, setShowApiModal] = useState(false);
+  const [editingIntegration, setEditingIntegration] = useState<APIIntegration | null>(null);
   const [judgeModelId, setJudgeModelId] = useState<string>('0');
   
   const [passwordForm] = Form.useForm();
@@ -60,13 +61,19 @@ const Settings: React.FC = () => {
 
   const handleApiSubmit = async (values: any) => {
     try {
-      await settingsAPI.addIntegration(values);
-      message.success('API интеграция успешно добавлена!');
+      if (editingIntegration) {
+        await settingsAPI.updateIntegration(editingIntegration.id, values);
+        message.success('API интеграция успешно обновлена!');
+      } else {
+        await settingsAPI.addIntegration(values);
+        message.success('API интеграция успешно добавлена!');
+      }
       setShowApiModal(false);
+      setEditingIntegration(null);
       apiForm.resetFields();
       loadData();
     } catch (error: any) {
-      message.error(error.response?.data?.error || 'Ошибка при добавлении интеграции');
+      message.error(error.response?.data?.error || 'Ошибка при сохранении интеграции');
     }
   };
 
@@ -166,21 +173,36 @@ const Settings: React.FC = () => {
                   </Text>
 
                   {integrations.length > 0 ? (
-                    <List
-                      style={{ marginTop: 12 }}
-                      dataSource={integrations}
-                      renderItem={(integration) => (
-                        <List.Item
-                          actions={[
-                            <Button
-                              type="text"
-                              danger
-                              size="small"
-                              icon={<DeleteOutlined />}
-                              onClick={() => handleDeleteIntegration(integration.id)}
-                            />
-                          ]}
-                        >
+                      <List
+                        style={{ marginTop: 12 }}
+                        dataSource={integrations}
+                        renderItem={(integration) => (
+                          <List.Item
+                            actions={[
+                              <Button
+                                type="text"
+                                size="small"
+                                icon={<EditOutlined />}
+                                onClick={() => {
+                                  apiForm.setFieldsValue({
+                                    name: integration.name,
+                                    api_url: integration.api_url,
+                                    api_key: integration.api_key,
+                                    description: integration.description,
+                                  });
+                                  setEditingIntegration(integration);
+                                  setShowApiModal(true);
+                                }}
+                              />,
+                              <Button
+                                type="text"
+                                danger
+                                size="small"
+                                icon={<DeleteOutlined />}
+                                onClick={() => handleDeleteIntegration(integration.id)}
+                              />
+                            ]}
+                          >
                           <List.Item.Meta
                             title={<Text strong>{integration.name}</Text>}
                             description={
@@ -377,10 +399,11 @@ const Settings: React.FC = () => {
       </Space>
 
       <Modal
-        title="Добавить API интеграцию"
+        title={editingIntegration ? "Редактировать API интеграцию" : "Добавить API интеграцию"}
         open={showApiModal}
         onCancel={() => {
           setShowApiModal(false);
+          setEditingIntegration(null);
           apiForm.resetFields();
         }}
         footer={null}
@@ -418,12 +441,13 @@ const Settings: React.FC = () => {
             <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
               <Button onClick={() => {
                 setShowApiModal(false);
+                setEditingIntegration(null);
                 apiForm.resetFields();
               }}>
                 Отмена
               </Button>
               <Button type="primary" htmlType="submit">
-                Добавить интеграцию
+                {editingIntegration ? 'Сохранить изменения' : 'Добавить интеграцию'}
               </Button>
             </Space>
           </Form.Item>

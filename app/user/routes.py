@@ -260,6 +260,42 @@ def test_api_integration():
     return jsonify(result)
 
 
+@user_bp.route('/api-integrations/update/<int:integration_id>', methods=['POST'])
+@login_required
+def update_api_integration(integration_id):
+    integration = ApiIntegration.query.get_or_404(integration_id)
+
+    if integration.user_id != current_user.id:
+        return jsonify({'error': 'У вас нет прав для редактирования этой интеграции'}), 403
+
+    try:
+        data = request.json
+        integration.name = data.get('name', integration.name)
+        integration.api_url = data.get('api_url', integration.api_url)
+        integration.description = data.get('description', integration.description)
+        
+        # Update API key only if provided
+        if 'api_key' in data and data['api_key']:
+            integration.api_key = data['api_key']
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'API интеграция успешно обновлена!',
+            'integration': {
+                'id': integration.id,
+                'name': integration.name,
+                'api_url': integration.api_url,
+                'description': integration.description,
+                'provider': integration.name
+            }
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Ошибка при обновлении интеграции: {str(e)}'}), 500
+
+
 @user_bp.route('/api-integrations/delete/<int:integration_id>', methods=['POST'])
 @login_required
 def delete_api_integration(integration_id):
@@ -381,6 +417,39 @@ def add_model():
                 flash(f"{getattr(form, field).label.text}: {error}", 'danger')
 
         return redirect(url_for('user.models'))
+
+
+@user_bp.route('/models/update/<int:model_id>', methods=['POST'])
+@login_required
+def update_model(model_id):
+    model = UserModel.query.get_or_404(model_id)
+
+    if model.user_id != current_user.id:
+        return jsonify({'error': 'У вас нет прав для редактирования этой модели'}), 403
+
+    try:
+        data = request.json
+        model.name = data.get('name', model.name)
+        model.description = data.get('description', model.description)
+        model.color = data.get('color', model.color)
+        
+        # Update API integration
+        api_integration_id = data.get('api_integration_id')
+        if api_integration_id and api_integration_id != '0' and api_integration_id != 0:
+            model.api_integration_id = int(api_integration_id)
+        else:
+            model.api_integration_id = None
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Модель успешно обновлена!',
+            'model': model.to_dict()
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Ошибка при обновлении модели: {str(e)}'}), 500
 
 
 @user_bp.route('/models/delete/<int:model_id>', methods=['POST'])
@@ -585,6 +654,88 @@ def add_dataset():
     return redirect(url_for('user.datasets'))
 
 
+@user_bp.route('/datasets/update/<int:dataset_id>', methods=['POST'])
+@login_required
+def update_dataset(dataset_id):
+    dataset = UserDataset.query.get_or_404(dataset_id)
+
+    if dataset.user_id != current_user.id:
+        return jsonify({'error': 'У вас нет прав для редактирования этого датасета'}), 403
+
+    try:
+        data = request.json
+        dataset.name = data.get('name', dataset.name)
+        dataset.description = data.get('description', dataset.description)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Датасет успешно обновлен!',
+            'dataset': dataset.to_dict()
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Ошибка при обновлении датасета: {str(e)}'}), 500
+
+
+@user_bp.route('/datasets/update-content/<int:dataset_id>', methods=['POST'])
+@login_required
+def update_dataset_content(dataset_id):
+    dataset = UserDataset.query.get_or_404(dataset_id)
+
+    if dataset.user_id != current_user.id:
+        return jsonify({'error': 'У вас нет прав для редактирования этого датасета'}), 403
+
+    try:
+        if 'csv_file' not in request.files:
+            return jsonify({'error': 'CSV файл не предоставлен'}), 400
+        
+        file = request.files['csv_file']
+        if file.filename == '':
+            return jsonify({'error': 'Файл не выбран'}), 400
+        
+        # Delete old file
+        if os.path.exists(dataset.file_path):
+            os.remove(dataset.file_path)
+        
+        # Save new file
+        filename = secure_filename(file.filename)
+        timestamp = str(int(datetime.utcnow().timestamp()))
+        unique_filename = f"{current_user.id}_{timestamp}_{filename}"
+        
+        upload_folder = get_upload_folder()
+        file_path = os.path.join(upload_folder, unique_filename)
+        
+        file.save(file_path)
+        
+        # Analyze new file
+        file_info = analyze_csv_file(file_path)
+        file_size = os.path.getsize(file_path)
+        
+        # Update dataset record
+        dataset.filename = filename
+        dataset.file_path = file_path
+        dataset.file_size = file_size
+        dataset.row_count = file_info['row_count']
+        dataset.column_count = file_info['column_count']
+        dataset.columns_info = file_info['columns_info']
+        dataset.uploaded_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Содержимое датасета успешно обновлено!',
+            'dataset': dataset.to_dict()
+        })
+    except Exception as e:
+        db.session.rollback()
+        if 'file_path' in locals() and os.path.exists(file_path):
+            os.remove(file_path)
+        return jsonify({'error': f'Ошибка при обновлении содержимого датасета: {str(e)}'}), 500
+
+
 @user_bp.route('/datasets/delete/<int:dataset_id>', methods=['POST'])
 @login_required
 def delete_dataset(dataset_id):
@@ -635,3 +786,98 @@ def preview_dataset(dataset_id):
 
     except Exception as e:
         return jsonify({'error': f'Ошибка при загрузке предпросмотра: {str(e)}'}), 500
+
+
+@user_bp.route('/datasets/get-data/<int:dataset_id>')
+@login_required
+def get_dataset_data(dataset_id):
+    """Get full dataset data for editing"""
+    dataset = UserDataset.query.get_or_404(dataset_id)
+
+    if dataset.user_id != current_user.id:
+        return jsonify({'error': 'У вас нет прав для просмотра этого датасета'}), 403
+
+    try:
+        data = []
+        with open(dataset.file_path, 'r', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                data.append({
+                    'prompt': row.get('prompt', ''),
+                    'reference': row.get('reference', '')
+                })
+
+        return jsonify({
+            'success': True,
+            'data': data,
+            'total_rows': len(data)
+        })
+
+    except Exception as e:
+        return jsonify({'error': f'Ошибка при загрузке данных: {str(e)}'}), 500
+
+
+@user_bp.route('/datasets/save-data/<int:dataset_id>', methods=['POST'])
+@login_required
+def save_dataset_data(dataset_id):
+    """Save edited dataset data"""
+    dataset = UserDataset.query.get_or_404(dataset_id)
+
+    if dataset.user_id != current_user.id:
+        return jsonify({'error': 'У вас нет прав для редактирования этого датасета'}), 403
+
+    try:
+        data = request.json
+        rows = data.get('rows', [])
+        
+        if not rows or len(rows) == 0:
+            return jsonify({'error': 'Датасет должен содержать хотя бы одну строку'}), 400
+        
+        # Delete old file
+        if os.path.exists(dataset.file_path):
+            os.remove(dataset.file_path)
+        
+        # Create new file with updated data
+        timestamp = str(int(datetime.utcnow().timestamp()))
+        filename = f"{current_user.id}_{timestamp}_{secure_filename(dataset.name)}.csv"
+        
+        upload_folder = get_upload_folder()
+        file_path = os.path.join(upload_folder, filename)
+        
+        # Write CSV
+        with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ['prompt', 'reference']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            
+            for row in rows:
+                writer.writerow({
+                    'prompt': row.get('prompt', ''),
+                    'reference': row.get('reference', '')
+                })
+        
+        # Analyze the updated file
+        file_info = analyze_csv_file(file_path)
+        file_size = os.path.getsize(file_path)
+        
+        # Update dataset record
+        dataset.filename = filename
+        dataset.file_path = file_path
+        dataset.file_size = file_size
+        dataset.row_count = file_info['row_count']
+        dataset.column_count = file_info['column_count']
+        dataset.columns_info = file_info['columns_info']
+        dataset.uploaded_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Данные датасета успешно обновлены!',
+            'dataset': dataset.to_dict()
+        })
+    except Exception as e:
+        db.session.rollback()
+        if 'file_path' in locals() and os.path.exists(file_path):
+            os.remove(file_path)
+        return jsonify({'error': f'Ошибка при сохранении данных: {str(e)}'}), 500

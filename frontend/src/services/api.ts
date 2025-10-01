@@ -141,6 +141,25 @@ export const datasetsAPI = {
     const response = await api.post(`/user/datasets/update/${datasetId}`, data);
     return response.data;
   },
+
+  updateDatasetContent: async (datasetId: number, formData: FormData): Promise<UserDataset> => {
+    const response = await api.post(`/user/datasets/update-content/${datasetId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  getDatasetData: async (datasetId: number): Promise<{ data: Array<{prompt: string; reference: string}>; total_rows: number }> => {
+    const response = await api.get(`/user/datasets/get-data/${datasetId}`);
+    return response.data;
+  },
+
+  saveDatasetData: async (datasetId: number, rows: Array<{prompt: string; reference: string}>): Promise<UserDataset> => {
+    const response = await api.post(`/user/datasets/save-data/${datasetId}`, { rows });
+    return response.data;
+  },
 };
 
 // Settings API
@@ -162,6 +181,11 @@ export const settingsAPI = {
 
   addIntegration: async (data: any): Promise<APIIntegration> => {
     const response = await api.post('/user/api-integrations/add', data);
+    return response.data;
+  },
+
+  updateIntegration: async (integrationId: number, data: any): Promise<APIIntegration> => {
+    const response = await api.post(`/user/api-integrations/update/${integrationId}`, data);
     return response.data;
   },
 
