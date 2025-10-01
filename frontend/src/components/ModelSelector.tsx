@@ -109,19 +109,11 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModels, onSelecti
                         <Tag color="gold" icon={<CheckCircleOutlined />}>СУДЬЯ</Tag>
                       )}
                     </div>
-                    <Space size={4} wrap>
-                      {model.api_integration?.name && (
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          {model.api_integration.name}
-                        </Text>
-                      )}
-                      <Tag color="blue">Пользовательская</Tag>
-                      {model.api_url || model.api_integration ? (
-                        <Tag color="green" icon={<ApiOutlined />}>API</Tag>
-                      ) : (
-                        <Tag color="orange" icon={<WarningOutlined />}>Нет API</Tag>
-                      )}
-                    </Space>
+                    {model.api_integration?.name && (
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {model.api_integration.name}
+                      </Text>
+                    )}
                   </div>
                 </div>
               </Card>

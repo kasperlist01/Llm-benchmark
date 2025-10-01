@@ -107,11 +107,6 @@ const DatasetSelector: React.FC<DatasetSelectorProps> = ({
                           </Text>
                         </Space>
                       )}
-                      <Space size={[4, 4]} wrap>
-                        <Tag color="orange" icon={<DatabaseOutlined />}>
-                          {dataset.row_count ? `${dataset.row_count.toLocaleString()} строк` : 'Неизвестно строк'}
-                        </Tag>
-                      </Space>
                     </Space>
                   </div>
                 </div>

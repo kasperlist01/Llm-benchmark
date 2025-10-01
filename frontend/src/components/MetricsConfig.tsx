@@ -34,8 +34,9 @@ const MetricsConfig: React.FC<MetricsConfigProps> = ({ metrics, onMetricsChange 
     <Card
       title="Конфигурация метрик"
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+      bodyStyle={{ paddingTop: 16, paddingBottom: 16 }}
     >
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
         {metricsInfo.map((metricInfo) => {
           const value = metrics[metricInfo.key].weight;
           const percentage = Math.round(value * 100);
@@ -46,7 +47,7 @@ const MetricsConfig: React.FC<MetricsConfigProps> = ({ metrics, onMetricsChange 
                 display: 'flex', 
                 justifyContent: 'space-between', 
                 alignItems: 'center',
-                marginBottom: 8
+                marginBottom: 4
               }}>
                 <Text strong>{metricInfo.label}</Text>
                 <Text style={{ color: metricInfo.color, fontWeight: 600 }}>
