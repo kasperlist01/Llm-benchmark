@@ -215,122 +215,144 @@ const Models: React.FC = () => {
                 <Col xs={24} sm={12} md={8} key={model.id}>
                   <Card
                     hoverable
-                    style={{ height: '100%', minHeight: '320px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+                    style={{ 
+                      height: '100%', 
+                      minHeight: '320px', 
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)' 
+                    }}
+                    bodyStyle={{
+                      height: '100%',
+                      padding: '24px',
+                    }}
                   >
-                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                        <div
-                          style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: '8px',
-                            backgroundColor: model.color || '#808080',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#fff',
-                            fontSize: 18,
-                            fontWeight: 'bold',
-                            flexShrink: 0,
-                          }}
-                        >
-                          {model.name.substring(0, 2).toUpperCase()}
+                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                      {/* Header */}
+                      <div style={{ marginBottom: 20 }}>
+                        <div style={{ 
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 56,
+                          height: 56,
+                          background: model.color || '#1890ff',
+                          borderRadius: '16px',
+                          marginBottom: 16,
+                        }}>
+                          <Text strong style={{ color: '#fff', fontSize: 20 }}>
+                            {model.name.substring(0, 2).toUpperCase()}
+                          </Text>
                         </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ marginBottom: 8 }}>
                           <Space size={8} wrap>
-                            <Text strong style={{ fontSize: 16 }}>{model.name}</Text>
+                            <Title level={4} style={{ margin: 0, fontSize: 18 }}>
+                              {model.name}
+                            </Title>
                             {isJudge && (
                               <Tag color="gold" icon={<CheckCircleOutlined />}>СУДЬЯ</Tag>
                             )}
                           </Space>
-                          <div style={{ marginTop: 4 }}>
-                            <Text type="secondary" style={{ fontSize: 13 }}>
-                              {model.api_integration?.name || 'Нет интеграции'}
-                            </Text>
-                          </div>
                         </div>
+                        {model.description && (
+                          <Text 
+                            type="secondary"
+                            style={{ 
+                              fontSize: 13,
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              lineHeight: 1.6
+                            }}
+                          >
+                            {model.description}
+                          </Text>
+                        )}
                       </div>
 
-                      {model.description && (
-                        <Paragraph
-                          type="secondary"
-                          ellipsis={{ rows: 2 }}
-                          style={{ marginBottom: 0 }}
-                        >
-                          {model.description}
-                        </Paragraph>
-                      )}
-
-                      {model.api_integration ? (
-                        <div style={{ 
-                          padding: '12px', 
-                          backgroundColor: '#f5f5f5', 
-                          borderRadius: '6px' 
-                        }}>
-                          <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                            <Space>
-                              <ApiOutlined style={{ color: '#1890ff' }} />
-                              <Text strong style={{ fontSize: 12 }}>API Integration:</Text>
-                            </Space>
-                            <Text style={{ fontSize: 12, wordBreak: 'break-all' }}>
-                              {model.api_integration.api_url}
-                            </Text>
-                          </Space>
-                        </div>
-                      ) : (
-                        <div style={{ 
-                          padding: '12px', 
-                          backgroundColor: '#fff7e6', 
-                          borderRadius: '6px',
-                          border: '1px solid #ffd591'
-                        }}>
+                      {/* API Integration section */}
+                      <div style={{ 
+                        background: '#f5f5f5',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        marginBottom: 16,
+                      }}>
+                        {model.api_integration ? (
+                          <>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                              <Text strong style={{ fontSize: 15 }}>API Integration</Text>
+                              <ApiOutlined style={{ color: '#1890ff', fontSize: 16 }} />
+                            </div>
+                            <div style={{ 
+                              paddingTop: 10, 
+                              borderTop: '1px solid #e8e8e8',
+                            }}>
+                              <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 4 }}>
+                                Интеграция:
+                              </Text>
+                              <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 8 }}>
+                                {model.api_integration.name}
+                              </Text>
+                              <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 4 }}>
+                                URL:
+                              </Text>
+                              <Text style={{ fontSize: 12, color: '#666', wordBreak: 'break-all' }}>
+                                {model.api_integration.api_url}
+                              </Text>
+                            </div>
+                          </>
+                        ) : (
                           <Space>
                             <WarningOutlined style={{ color: '#fa8c16' }} />
-                            <Text type="warning" style={{ fontSize: 12 }}>
+                            <Text type="warning" style={{ fontSize: 13 }}>
                               Нет API интеграции
                             </Text>
                           </Space>
-                        </div>
-                      )}
-
-                      <Space style={{ width: '100%' }}>
-                        {model.api_integration && (
-                          <Button
-                            type="default"
-                            icon={<ExperimentOutlined />}
-                            onClick={() => handleTestModel(modelIdNum)}
-                            loading={testingModel === modelIdNum}
-                            style={{ flex: 1 }}
-                          >
-                            Тест
-                          </Button>
                         )}
-                        <Button
-                          icon={<EditOutlined />}
-                          onClick={() => {
-                            form.setFieldsValue({
-                              name: model.name,
-                              description: model.description,
-                              color: model.color,
-                              api_integration_id: model.api_integration?.id,
-                            });
-                            setEditingModel(model);
-                            setShowModal(true);
-                          }}
-                          style={{ flex: 1 }}
-                        >
-                          Изменить
-                        </Button>
-                        <Button
-                          danger
-                          icon={<DeleteOutlined />}
-                          onClick={() => handleDelete(modelIdNum)}
-                          style={{ flex: 1 }}
-                        >
-                          Удалить
-                        </Button>
-                      </Space>
-                    </Space>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div style={{ marginTop: 'auto' }}>
+                        <div style={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: model.api_integration ? '1fr 1fr 40px' : '1fr 40px',
+                          gap: 8 
+                        }}>
+                          {model.api_integration && (
+                            <Button
+                              icon={<ExperimentOutlined />}
+                              onClick={() => handleTestModel(modelIdNum)}
+                              loading={testingModel === modelIdNum}
+                              style={{ flex: 1, height: 40 }}
+                            >
+                              Тест
+                            </Button>
+                          )}
+                          <Button
+                            icon={<EditOutlined />}
+                            onClick={() => {
+                              form.setFieldsValue({
+                                name: model.name,
+                                description: model.description,
+                                color: model.color,
+                                api_integration_id: model.api_integration?.id,
+                              });
+                              setEditingModel(model);
+                              setShowModal(true);
+                            }}
+                            style={{ flex: 1, height: 40 }}
+                          >
+                            Изменить
+                          </Button>
+                          <Button
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={() => handleDelete(modelIdNum)}
+                            style={{ height: 40 }}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </Card>
                 </Col>
               );
