@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Row, Col, Card, Button, Typography, Space, Badge, Empty, Spin, Tag } from 'antd';
-import { PlayCircleOutlined, ExperimentOutlined, DatabaseOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { PlayCircleOutlined, ExperimentOutlined, DatabaseOutlined, CheckCircleOutlined, DragOutlined } from '@ant-design/icons';
 import ModelSelector from '../components/ModelSelector';
 import BenchmarkSelector from '../components/BenchmarkSelector';
 import DatasetSelector from '../components/DatasetSelector';
@@ -28,6 +28,53 @@ const Dashboard: React.FC = () => {
   } = useDashboard();
   
   const [loading, setLoading] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = localStorage.getItem('dashboardSidebarWidth');
+    return saved ? parseInt(saved) : 33.33; // По умолчанию 33.33% (8/24 колонок)
+  });
+  const [isResizing, setIsResizing] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    localStorage.setItem('dashboardSidebarWidth', sidebarWidth.toString());
+  }, [sidebarWidth]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsResizing(true);
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing || !containerRef.current) return;
+
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+      
+      // Ограничиваем ширину между 20% и 50%
+      if (newWidth >= 20 && newWidth <= 50) {
+        setSidebarWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
 
   const handleRunBenchmark = async () => {
     if (selectedModels.length === 0 || selectedBenchmarks.length === 0) {
@@ -63,29 +110,99 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ height: 'calc(100vh - 112px)', overflow: 'hidden' }}>
-      <Row gutter={16} style={{ height: '100%' }}>
-        {/* Левая панель - Конфигурация */}
-        <Col xs={24} lg={8} style={{ height: '100%', overflowY: 'auto', paddingBottom: 24 }}>
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <ModelSelector
-              selectedModels={selectedModels}
-              onSelectionChange={setSelectedModels}
-            />
-            <BenchmarkSelector
-              selectedBenchmarks={selectedBenchmarks}
-              onSelectionChange={setSelectedBenchmarks}
-            />
-            <DatasetSelector
-              selectedDatasets={selectedDatasets}
-              onSelectionChange={setSelectedDatasets}
-            />
-            <MetricsConfig metrics={metrics} onMetricsChange={setMetrics} />
-          </Space>
-        </Col>
+    <div 
+      ref={containerRef}
+      style={{ 
+        height: 'calc(100vh - 112px)', 
+        overflow: 'hidden',
+        position: 'relative',
+        display: 'flex'
+      }}
+    >
+      {/* Левая панель - Конфигурация */}
+      <div 
+        style={{ 
+          width: `${sidebarWidth}%`,
+          height: '100%', 
+          overflowY: 'auto', 
+          paddingRight: 8,
+          paddingBottom: 24,
+          transition: isResizing ? 'none' : 'width 0.2s ease'
+        }}
+      >
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <ModelSelector
+            selectedModels={selectedModels}
+            onSelectionChange={setSelectedModels}
+          />
+          <BenchmarkSelector
+            selectedBenchmarks={selectedBenchmarks}
+            onSelectionChange={setSelectedBenchmarks}
+          />
+          <DatasetSelector
+            selectedDatasets={selectedDatasets}
+            onSelectionChange={setSelectedDatasets}
+          />
+          <MetricsConfig metrics={metrics} onMetricsChange={setMetrics} />
+        </Space>
+      </div>
 
-        {/* Правая панель - Результаты */}
-        <Col xs={24} lg={16} style={{ height: '100%', overflowY: 'auto', paddingBottom: 24 }}>
+      {/* Разделитель для изменения размера */}
+      <div
+        onMouseDown={handleMouseDown}
+        style={{
+          width: 16,
+          cursor: 'col-resize',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: isResizing ? '#1890ff' : 'transparent',
+          transition: 'background-color 0.2s',
+          position: 'relative',
+          flexShrink: 0
+        }}
+        onMouseEnter={(e) => {
+          if (!isResizing) {
+            e.currentTarget.style.backgroundColor = '#f0f0f0';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isResizing) {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }
+        }}
+      >
+        <div
+          style={{
+            width: 4,
+            height: 40,
+            backgroundColor: isResizing ? '#fff' : '#d9d9d9',
+            borderRadius: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <DragOutlined 
+            style={{ 
+              fontSize: 12, 
+              color: isResizing ? '#1890ff' : '#999',
+              transform: 'rotate(90deg)'
+            }} 
+          />
+        </div>
+      </div>
+
+      {/* Правая панель - Результаты */}
+      <div 
+        style={{ 
+          flex: 1,
+          height: '100%', 
+          overflowY: 'auto', 
+          paddingLeft: 8,
+          paddingBottom: 24 
+        }}
+      >
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <Card style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
               <Space direction="vertical" size="large" style={{ width: '100%' }}>
@@ -230,9 +347,8 @@ const Dashboard: React.FC = () => {
                 />
               )}
             </Card>
-          </Space>
-        </Col>
-      </Row>
+        </Space>
+      </div>
     </div>
   );
 };
