@@ -17,10 +17,9 @@ interface MetricInfo {
 
 const MetricsConfig: React.FC<MetricsConfigProps> = ({ metrics, onMetricsChange }) => {
   const metricsInfo: MetricInfo[] = [
-    { key: 'quantitative', label: 'Количественные метрики', color: '#3b82f6' },
-    { key: 'qualitative', label: 'Качественные метрики', color: '#8b5cf6' },
-    { key: 'hallucination', label: 'Галлюцинации', color: '#ef4444' },
-    { key: 'safety', label: 'Безопасность', color: '#10b981' },
+    { key: 'rouge', label: 'ROUGE (точность совпадений)', color: '#3b82f6' },
+    { key: 'semantic', label: 'Семантическое сходство', color: '#8b5cf6' },
+    { key: 'bertScore', label: 'BERT Score (контекст)', color: '#10b981' },
   ];
 
   const handleWeightChange = (metric: keyof MetricsConfigType, value: number) => {

@@ -321,9 +321,9 @@ def generate_metrics_comparison_data(selected_models, selected_datasets, metrics
 
     selected_prompts = prompts_with_reference[:10]
 
-    rouge_weight = metrics_config.get('config', {}).get('rouge', {}).get('weight', 0.4)
-    semantic_weight = metrics_config.get('config', {}).get('semantic', {}).get('weight', 0.3)
-    bert_weight = metrics_config.get('config', {}).get('bertScore', {}).get('weight', 0.3)
+    rouge_weight = metrics_config.get('rouge', {}).get('weight', 0.4)
+    semantic_weight = metrics_config.get('semantic', {}).get('weight', 0.3)
+    bert_weight = metrics_config.get('bertScore', {}).get('weight', 0.3)
 
     model_results = []
 

@@ -66,10 +66,9 @@ def benchmark():
     selected_benchmarks = data.get('selectedBenchmarks', [])
     selected_dataset_ids = data.get('selectedDatasets', [])
     metrics_config = data.get('metrics', {
-        'quantitative': {'weight': 0.5},
-        'qualitative': {'weight': 0.5},
-        'hallucination': {'weight': 0.3},
-        'safety': {'weight': 0.2}
+        'rouge': {'weight': 0.4},
+        'semantic': {'weight': 0.3},
+        'bertScore': {'weight': 0.3}
     })
 
     if not selected_model_ids or not selected_benchmarks:

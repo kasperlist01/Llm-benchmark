@@ -39,10 +39,9 @@ export interface Benchmark {
 }
 
 export interface MetricsConfig {
-  quantitative: { weight: number };
-  qualitative: { weight: number };
-  hallucination: { weight: number };
-  safety: { weight: number };
+  rouge: { weight: number };
+  semantic: { weight: number };
+  bertScore: { weight: number };
 }
 
 export interface BenchmarkRequest {

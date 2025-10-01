@@ -24,10 +24,9 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [selectedBenchmark, setSelectedBenchmark] = useState<Benchmark | null>(null);
   const [selectedDatasets, setSelectedDatasets] = useState<UserDataset[]>([]);
   const [metrics, setMetrics] = useState<MetricsConfigType>({
-    quantitative: { weight: 0.5 },
-    qualitative: { weight: 0.5 },
-    hallucination: { weight: 0.3 },
-    safety: { weight: 0.2 },
+    rouge: { weight: 0.4 },
+    semantic: { weight: 0.3 },
+    bertScore: { weight: 0.3 },
   });
   const [results, setResults] = useState<any | null>(null);
   const [resultsVisible, setResultsVisible] = useState<boolean>(false);

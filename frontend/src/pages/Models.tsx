@@ -158,52 +158,92 @@ const Models: React.FC = () => {
 
         {/* Выбор модели-судьи */}
         <Card
-          title={
-            <Space>
-              <ApiOutlined />
-              <span>Модель-судья</span>
-            </Space>
-          }
           style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+          bodyStyle={{ padding: '24px' }}
         >
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-              Выберите модель, которая будет использоваться для автоматической оценки других моделей
-            </Paragraph>
-
-            <Select
-              size="large"
-              style={{ width: '100%', maxWidth: 500 }}
-              value={judgeModelId ? String(judgeModelId) : '0'}
-              onChange={async (value) => {
-                try {
-                  const newJudgeModelId = value === '0' ? null : parseInt(value);
-                  await settingsAPI.updateSettings({
-                    judge_model_id: newJudgeModelId,
-                  });
-                  setJudgeModelId(newJudgeModelId);
-                  message.success('Модель-судья успешно обновлена!');
-                  loadData(); // Перезагружаем данные для обновления тегов
-                } catch (error: any) {
-                  message.error(error.response?.data?.error || 'Ошибка при обновлении модели-судьи');
-                }
-              }}
-              placeholder="Выберите модель-судью"
-            >
-              <Select.Option value="0">Не выбрано</Select.Option>
-              {models.map((model) => {
-                const modelIdNum = parseInt(model.id.replace('custom_', ''));
-                return (
-                  <Select.Option key={model.id} value={String(modelIdNum)}>
-                    {model.name}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20 }}>
+            <div style={{ 
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 56,
+              height: 56,
+              background: '#1890ff',
+              borderRadius: '16px',
+              flexShrink: 0,
+            }}>
+              <ApiOutlined style={{ fontSize: 28, color: '#fff' }} />
+            </div>
+            
+            <div style={{ flex: 1 }}>
+              <Title level={4} style={{ margin: 0, marginBottom: 8, fontSize: 18 }}>
+                Модель-судья
+              </Title>
+              <Text type="secondary" style={{ fontSize: 13, display: 'block', marginBottom: 16, lineHeight: 1.6 }}>
+                Выберите модель для автоматической оценки других моделей
+              </Text>
+              
+              <div style={{ 
+                background: '#f5f5f5',
+                borderRadius: '12px',
+                padding: '16px',
+              }}>
+                <Text strong style={{ fontSize: 15, display: 'block', marginBottom: 12 }}>
+                  Текущая модель-судья
+                </Text>
+                <Select
+                  size="large"
+                  style={{ width: '100%' }}
+                  value={judgeModelId ? String(judgeModelId) : '0'}
+                  onChange={async (value) => {
+                    try {
+                      const newJudgeModelId = value === '0' ? null : parseInt(value);
+                      await settingsAPI.updateSettings({
+                        judge_model_id: newJudgeModelId,
+                      });
+                      setJudgeModelId(newJudgeModelId);
+                      message.success('Модель-судья успешно обновлена!');
+                      loadData();
+                    } catch (error: any) {
+                      message.error(error.response?.data?.error || 'Ошибка при обновлении модели-судьи');
+                    }
+                  }}
+                  placeholder="Выберите модель-судью"
+                >
+                  <Select.Option value="0">
+                    <Text type="secondary">Не выбрано</Text>
                   </Select.Option>
-                );
-              })}
-            </Select>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              Только модели с настроенными API интеграциями могут выступать в роли судьи
-            </Text>
-          </Space>
+                  {models.map((model) => {
+                    const modelIdNum = parseInt(model.id.replace('custom_', ''));
+                    return (
+                      <Select.Option key={model.id} value={String(modelIdNum)}>
+                        <Space>
+                          <div style={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: '6px',
+                            background: model.color || '#1890ff',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#fff',
+                            fontSize: 11,
+                            fontWeight: 'bold'
+                          }}>
+                            {model.name.substring(0, 2).toUpperCase()}
+                          </div>
+                          <span>{model.name}</span>
+                          {model.api_integration && (
+                            <Tag color="success" style={{ margin: 0 }}>API</Tag>
+                          )}
+                        </Space>
+                      </Select.Option>
+                    );
+                  })}
+                </Select>
+              </div>
+            </div>
+          </div>
         </Card>
 
         {models.length > 0 ? (
