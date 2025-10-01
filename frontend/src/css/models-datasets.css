@@ -1,0 +1,712 @@
+/* =============================================================================
+   КОМПОНЕНТЫ ИНТЕРФЕЙСА - ОБЩИЕ СТИЛИ
+   ============================================================================= */
+
+.models-grid,
+.benchmarks-list,
+.datasets-grid {
+    max-height: var(--component-max-height);
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.models-scroll-container,
+.benchmarks-scroll-container,
+.datasets-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.model-card,
+.benchmark-item,
+.dataset-card {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+}
+
+.model-card:hover,
+.benchmark-item:hover,
+.dataset-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+}
+
+.model-card:hover {
+    border-color: rgba(37, 99, 235, 0.3);
+}
+
+.benchmark-item:hover {
+    border-color: var(--primary-color);
+    background-color: rgba(37, 99, 235, 0.05);
+}
+
+.dataset-card:hover {
+    border-color: rgba(5, 150, 105, 0.3);
+}
+
+.model-card.selected,
+.benchmark-item.selected,
+.dataset-card.selected {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    z-index: 3;
+}
+
+.model-card.selected {
+    border-color: var(--primary-color);
+    background-color: rgba(37, 99, 235, 0.05);
+}
+
+.benchmark-item.selected {
+    border-color: var(--primary-color);
+    background-color: rgba(37, 99, 235, 0.1);
+}
+
+.dataset-card.selected {
+    border-color: #059669;
+    background-color: rgba(5, 150, 105, 0.05);
+}
+
+.model-card.selected::after,
+.benchmark-item.selected::after,
+.dataset-card.selected::after {
+    content: "✓";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 18px;
+    height: 18px;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.model-card.selected::after {
+    background-color: var(--primary-color);
+}
+
+.benchmark-item.selected::after {
+    background-color: var(--primary-color);
+}
+
+.dataset-card.selected::after {
+    background-color: #059669;
+}
+
+/* =============================================================================
+   МОДЕЛИ
+   ============================================================================= */
+
+.models-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+    margin-top: 20px;
+}
+
+.models-grid .model-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: auto;
+}
+
+.model-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.model-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.user-models-container .model-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    font-size: 18px;
+    margin-right: 12px;
+}
+
+.model-card.selected .model-icon {
+    transform: scale(1.05);
+}
+
+.model-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.model-info h3 {
+    font-size: 14px;
+    margin: 0 0 2px 0;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.model-info p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.model-tags {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+
+.tag {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.custom-tag {
+    background-color: rgba(37, 99, 235, 0.1);
+    color: var(--primary-color);
+}
+
+.api-tag {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+}
+
+.no-api-tag {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.judge-indicator, .judge-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 1px 2px rgba(245, 158, 11, 0.3);
+    margin-left: 6px;
+}
+
+.model-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: auto;
+}
+
+.model-actions button,
+.model-actions form button {
+    flex: 1;
+    padding: 8px;
+    font-size: 14px;
+}
+
+.model-actions form {
+    flex: 1;
+}
+
+.user-models-container .models-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 24px;
+    margin-bottom: 60px;
+}
+
+.user-models-container .model-card {
+    padding: 24px;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    cursor: default;
+}
+
+.model-details {
+    margin-bottom: 20px;
+    flex-grow: 1;
+}
+
+.model-description {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.model-endpoint {
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    background-color: #f8fafc;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    margin-top: 12px;
+}
+
+.model-endpoint .label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+    font-size: 13px;
+}
+
+.model-endpoint .value {
+    word-break: break-all;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    color: #0d6efd;
+    padding: 6px 8px;
+    background-color: rgba(13, 110, 253, 0.05);
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.model-endpoint.no-integration .value {
+    color: var(--danger-color);
+}
+
+.user-models-container .model-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.user-models-container .model-actions button,
+.user-models-container .model-actions form button {
+    flex: 1;
+    padding: 10px 16px;
+    font-size: 10px;
+    font-weight: 500;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: var(--transition);
+    min-height: 40px;
+}
+
+/* =============================================================================
+   ДАТАСЕТЫ
+   ============================================================================= */
+
+.user-datasets-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.user-datasets-container .datasets-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 24px;
+    margin-bottom: 60px;
+}
+
+.user-datasets-container .dataset-card {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    cursor: default;
+}
+
+.user-datasets-container .dataset-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+}
+
+.dataset-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.user-datasets-container .dataset-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+    background-color: #059669;
+    margin-right: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.datasets-grid .dataset-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: auto;
+    padding: 16px;
+}
+
+.dataset-card .dataset-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: white;
+    background-color: #059669;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.dataset-card.selected .dataset-icon {
+    transform: scale(1.05);
+}
+
+.dataset-card .dataset-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.dataset-info h3 {
+    font-size: 16px;
+    margin: 0 0 4px 0;
+    color: var(--text-primary);
+}
+
+.user-datasets-container .dataset-info h3 {
+    font-size: 16px;
+}
+
+.dataset-card .dataset-info h3 {
+    font-size: 14px;
+    margin: 0 0 2px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dataset-info p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.dataset-card .dataset-info p {
+    font-size: 12px;
+    margin: 0 0 4px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dataset-details {
+    margin-bottom: 20px;
+    flex-grow: 1;
+}
+
+.dataset-description {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.dataset-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.dataset-card .dataset-stats {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background-color: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.stat-label {
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.stat-value {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 13px;
+}
+
+.dataset-card .dataset-stats .stat {
+    font-size: 9px;
+    padding: 2px 6px;
+    background-color: rgba(5, 150, 105, 0.1);
+    color: #047857;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.dataset-card .dataset-tags {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+
+.dataset-card .dataset-tags .stat {
+    font-size: 9px;
+    padding: 2px 6px;
+    background-color: rgba(5, 150, 105, 0.1);
+    color: #047857;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.dataset-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.dataset-actions button,
+.dataset-actions form button {
+    flex: 1;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: var(--transition);
+    min-height: 40px;
+}
+
+.dataset-actions form {
+    flex: 1;
+}
+
+.datasets-footer {
+    margin-top: 32px;
+    text-align: center;
+}
+
+/* =============================================================================
+   БЕНЧМАРКИ
+   ============================================================================= */
+
+.benchmarks-container {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.benchmark-item {
+    display: flex;
+    padding: 16px;
+}
+
+.benchmark-details {
+    flex: 1;
+}
+
+.benchmark-details h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: var(--text-primary);
+}
+
+.benchmark-details p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+}
+
+.benchmark-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.metric-tag {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+/* =============================================================================
+   ПУСТЫЕ СОСТОЯНИЯ
+   ============================================================================= */
+
+.empty-datasets,
+.empty-models,
+.empty-benchmarks {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 16px;
+    color: var(--text-secondary);
+    font-style: italic;
+    text-align: center;
+    background-color: #f8fafc;
+    border-radius: var(--border-radius);
+    border: 2px dashed var(--border-color);
+    font-size: 14px;
+}
+
+.empty-models i,
+.empty-benchmarks i,
+.empty-datasets i {
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    opacity: 0.6;
+    font-size: 24px;
+}
+
+.empty-datasets i {
+    color: #059669;
+}
+
+.empty-datasets h3 {
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.empty-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+    text-align: center;
+    background-color: #f8fafc;
+    border-radius: var(--border-radius);
+    border: 2px dashed var(--border-color);
+}
+
+/* =============================================================================
+   ВЫБРАННЫЕ ЭЛЕМЕНТЫ
+   ============================================================================= */
+
+.selected-models,
+.selected-benchmarks,
+.selected-datasets {
+    margin-top: 20px;
+    display: none;
+}
+
+.selected-models-list,
+.selected-benchmarks-list,
+.selected-datasets-list,
+.config-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.selected-model-pill,
+.selected-benchmark-pill,
+.selected-dataset-pill {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.selected-model-pill,
+.selected-benchmark-pill {
+    background-color: rgba(37, 99, 235, 0.1);
+    color: var(--primary-color);
+}
+
+.selected-dataset-pill {
+    background-color: rgba(5, 150, 105, 0.1);
+    color: #047857;
+}
+
+.selected-model-pill button,
+.selected-benchmark-pill button,
+.selected-dataset-pill button {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 16px;
+    margin-left: 6px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.selected-model-pill button:hover,
+.selected-benchmark-pill button:hover,
+.selected-dataset-pill button:hover {
+    transform: scale(1.2);
+}
+
+.empty-selection {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-style: italic;
+}

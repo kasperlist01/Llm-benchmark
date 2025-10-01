@@ -21,9 +21,9 @@ services:
 
   web:
     build: .
-    container_name: llm-benchmark-app
+    container_name: llm-benchmark-backend
     ports:
-      - "5000:5000"
+      - "5001:5000"
     volumes:
       - ./app:/app/app
       - ./uploads:/app/uploads
@@ -37,6 +37,17 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: llm-benchmark-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5001
+    depends_on:
+      - web
     restart: unless-stopped
 
 volumes:

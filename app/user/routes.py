@@ -165,31 +165,84 @@ def change_password():
     return redirect(url_for('user.settings'))
 
 
+@user_bp.route('/api-integrations', methods=['GET'])
+@login_required
+def get_api_integrations():
+    """Get user's API integrations as JSON"""
+    api_integrations = ApiIntegration.query.filter_by(user_id=current_user.id, is_active=True).all()
+    return jsonify([{
+        'id': integration.id,
+        'name': integration.name,
+        'api_url': integration.api_url,
+        'description': integration.description,
+        'provider': integration.name  # For compatibility
+    } for integration in api_integrations])
+
+
 @user_bp.route('/api-integrations/add', methods=['POST'])
 @login_required
 def add_api_integration():
-    form = AddApiIntegrationForm()
-    if form.validate_on_submit():
+    # Check if request is JSON (from React) or form-data (from Flask template)
+    if request.is_json:
+        # Handle JSON request from React
         try:
+            data = request.json
+            name = data.get('name')
+            api_url = data.get('api_url')
+            api_key = data.get('api_key', '')
+            description = data.get('description', '')
+            
+            if not name or not api_url:
+                return jsonify({'error': 'Название и API URL обязательны'}), 400
+            
             integration = ApiIntegration(
-                name=form.name.data,
-                api_url=form.api_url.data,
-                api_key=form.api_key.data,
-                description=form.description.data,
+                name=name,
+                api_url=api_url,
+                api_key=api_key,
+                description=description,
                 user_id=current_user.id
             )
             db.session.add(integration)
             db.session.commit()
-            flash('API интеграция успешно добавлена!', 'success')
+            
+            return jsonify({
+                'success': True,
+                'message': 'API интеграция успешно добавлена!',
+                'integration': {
+                    'id': integration.id,
+                    'name': integration.name,
+                    'api_url': integration.api_url,
+                    'description': integration.description,
+                    'provider': integration.name
+                }
+            })
         except Exception as e:
             db.session.rollback()
-            flash(f'Ошибка при добавлении интеграции: {str(e)}', 'danger')
+            return jsonify({'error': f'Ошибка при добавлении интеграции: {str(e)}'}), 500
     else:
-        for field, errors in form.errors.items():
-            for error in errors:
-                flash(f"{getattr(form, field).label.text}: {error}", 'danger')
+        # Handle form-data request from Flask template
+        form = AddApiIntegrationForm()
+        if form.validate_on_submit():
+            try:
+                integration = ApiIntegration(
+                    name=form.name.data,
+                    api_url=form.api_url.data,
+                    api_key=form.api_key.data,
+                    description=form.description.data,
+                    user_id=current_user.id
+                )
+                db.session.add(integration)
+                db.session.commit()
+                flash('API интеграция успешно добавлена!', 'success')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Ошибка при добавлении интеграции: {str(e)}', 'danger')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f"{getattr(form, field).label.text}: {error}", 'danger')
 
-    return redirect(url_for('user.settings'))
+        return redirect(url_for('user.settings'))
 
 
 @user_bp.route('/api-integrations/test', methods=['POST'])
@@ -265,30 +318,69 @@ def models():
 @user_bp.route('/models/add', methods=['POST'])
 @login_required
 def add_model():
-    form = AddModelForm(user_id=current_user.id)
-    if form.validate_on_submit():
+    # Check if request is JSON (from React) or form-data (from Flask template)
+    if request.is_json:
+        # Handle JSON request from React
         try:
+            data = request.json
+            name = data.get('name')
+            description = data.get('description', '')
+            color = data.get('color', '#808080')
+            api_integration_id = data.get('api_integration_id')
+            
+            if not name:
+                return jsonify({'error': 'Название модели обязательно'}), 400
+            
+            # Convert api_integration_id to integer or None
+            if api_integration_id and api_integration_id != '0' and api_integration_id != 0:
+                api_integration_id = int(api_integration_id)
+            else:
+                api_integration_id = None
+            
             model = UserModel(
-                name=form.name.data,
-                description=form.description.data,
-                color=form.color.data or "#808080",
+                name=name,
+                description=description,
+                color=color,
                 user_id=current_user.id,
-                api_integration_id=form.api_integration_id.data if form.api_integration_id.data != 0 else None
+                api_integration_id=api_integration_id
             )
             db.session.add(model)
             db.session.commit()
-            flash('Модель успешно добавлена!', 'success')
+            
+            return jsonify({
+                'success': True,
+                'message': 'Модель успешно добавлена!',
+                'model': model.to_dict()
+            })
         except Exception as e:
             db.session.rollback()
-            flash(f'Ошибка при добавлении модели: {str(e)}', 'danger')
+            return jsonify({'error': f'Ошибка при добавлении модели: {str(e)}'}), 500
+    else:
+        # Handle form-data request from Flask template
+        form = AddModelForm(user_id=current_user.id)
+        if form.validate_on_submit():
+            try:
+                model = UserModel(
+                    name=form.name.data,
+                    description=form.description.data,
+                    color=form.color.data or "#808080",
+                    user_id=current_user.id,
+                    api_integration_id=form.api_integration_id.data if form.api_integration_id.data != 0 else None
+                )
+                db.session.add(model)
+                db.session.commit()
+                flash('Модель успешно добавлена!', 'success')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Ошибка при добавлении модели: {str(e)}', 'danger')
+
+            return redirect(url_for('user.models'))
+
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"{getattr(form, field).label.text}: {error}", 'danger')
 
         return redirect(url_for('user.models'))
-
-    for field, errors in form.errors.items():
-        for error in errors:
-            flash(f"{getattr(form, field).label.text}: {error}", 'danger')
-
-    return redirect(url_for('user.models'))
 
 
 @user_bp.route('/models/delete/<int:model_id>', methods=['POST'])
@@ -372,6 +464,75 @@ def datasets():
     user_datasets = UserDataset.query.filter_by(user_id=current_user.id, is_active=True).all()
     return render_template('user/datasets.html', title='Мои датасеты',
                            form=form, datasets=user_datasets)
+
+
+@user_bp.route('/datasets/add-from-web', methods=['POST'])
+@login_required
+def add_dataset_from_web():
+    """Create dataset from web table data"""
+    try:
+        data = request.json
+        name = data.get('name')
+        description = data.get('description', '')
+        rows = data.get('rows', [])
+        
+        if not name:
+            return jsonify({'error': 'Название датасета обязательно'}), 400
+            
+        if not rows or len(rows) == 0:
+            return jsonify({'error': 'Датасет должен содержать хотя бы одну строку'}), 400
+        
+        # Create CSV file
+        timestamp = str(int(datetime.utcnow().timestamp()))
+        filename = f"{current_user.id}_{timestamp}_{secure_filename(name)}.csv"
+        
+        upload_folder = get_upload_folder()
+        file_path = os.path.join(upload_folder, filename)
+        
+        # Write CSV
+        with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
+            if rows:
+                fieldnames = ['prompt', 'reference']
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writeheader()
+                
+                for row in rows:
+                    writer.writerow({
+                        'prompt': row.get('prompt', ''),
+                        'reference': row.get('reference', '')
+                    })
+        
+        # Analyze the created file
+        file_info = analyze_csv_file(file_path)
+        file_size = os.path.getsize(file_path)
+        
+        # Create dataset record
+        dataset = UserDataset(
+            name=name,
+            description=description,
+            filename=filename,
+            file_path=file_path,
+            file_size=file_size,
+            row_count=file_info['row_count'],
+            column_count=file_info['column_count'],
+            columns_info=file_info['columns_info'],
+            user_id=current_user.id
+        )
+        
+        db.session.add(dataset)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Датасет успешно создан!',
+            'dataset': dataset.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        if 'file_path' in locals() and os.path.exists(file_path):
+            os.remove(file_path)
+        return jsonify({'error': f'Ошибка при создании датасета: {str(e)}'}), 500
 
 
 @user_bp.route('/datasets/add', methods=['POST'])

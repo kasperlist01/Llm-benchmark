@@ -21,7 +21,7 @@ class UserModel(db.Model):
 
     def to_dict(self):
         integration = self.api_integration
-        return {
+        result = {
             'id': f'custom_{self.id}',
             'name': self.name,
             'provider': integration.name if integration else 'No Integration',
@@ -33,3 +33,16 @@ class UserModel(db.Model):
             'color': self.color,
             'has_api': bool(integration and integration.is_active)
         }
+        
+        # Add api_integration object if exists
+        if integration:
+            result['api_integration'] = {
+                'id': integration.id,
+                'name': integration.name,
+                'api_url': integration.api_url,
+                'description': integration.description if hasattr(integration, 'description') else None
+            }
+        else:
+            result['api_integration'] = None
+            
+        return result
