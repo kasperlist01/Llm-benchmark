@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Row, Col, Card, Button, Typography, Space, Badge, Empty, Spin, Tag } from 'antd';
+import { PlayCircleOutlined, ExperimentOutlined, DatabaseOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import ModelSelector from '../components/ModelSelector';
 import BenchmarkSelector from '../components/BenchmarkSelector';
 import DatasetSelector from '../components/DatasetSelector';
@@ -6,8 +8,10 @@ import MetricsConfig from '../components/MetricsConfig';
 import ResultsVisualization from '../components/ResultsVisualization';
 import { BenchmarkRequest } from '../types';
 import { benchmarksAPI } from '../services/api';
-import { showNotification } from '../utils/notifications';
 import { useDashboard } from '../contexts/DashboardContext';
+import { message } from 'antd';
+
+const { Title, Text } = Typography;
 
 const Dashboard: React.FC = () => {
   const {
@@ -27,20 +31,12 @@ const Dashboard: React.FC = () => {
 
   const handleRunBenchmark = async () => {
     if (selectedModels.length === 0 || selectedBenchmarks.length === 0) {
-      showNotification({
-        message: 'Пожалуйста, выберите хотя бы одну модель и один тест',
-        type: 'error',
-        title: 'Неполная конфигурация',
-      });
+      message.error('Пожалуйста, выберите хотя бы одну модель и один тест');
       return;
     }
 
     if (selectedDatasets.length === 0) {
-      showNotification({
-        message: 'Пожалуйста, выберите хотя бы один датасет для проведения тестирования',
-        type: 'error',
-        title: 'Датасеты не выбраны',
-      });
+      message.error('Пожалуйста, выберите хотя бы один датасет для проведения тестирования');
       return;
     }
 
@@ -57,142 +53,186 @@ const Dashboard: React.FC = () => {
     try {
       const result = await benchmarksAPI.runBenchmark(request);
       setResults(result);
-      showNotification({
-        message: 'Тестирование успешно завершено',
-        type: 'success',
-        title: 'Успех',
-      });
+      message.success('Тестирование успешно завершено');
     } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.error || 'Ошибка при выполнении тестирования';
-      showNotification({
-        message: errorMessage,
-        type: 'error',
-        title: 'Ошибка тестирования',
-      });
+      const errorMessage = error.response?.data?.error || 'Ошибка при выполнении тестирования';
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="main-content">
-      <div className="configuration-panel">
-        <ModelSelector
-          selectedModels={selectedModels}
-          onSelectionChange={setSelectedModels}
-        />
-        <BenchmarkSelector
-          selectedBenchmarks={selectedBenchmarks}
-          onSelectionChange={setSelectedBenchmarks}
-        />
-        <DatasetSelector
-          selectedDatasets={selectedDatasets}
-          onSelectionChange={setSelectedDatasets}
-        />
-        <MetricsConfig metrics={metrics} onMetricsChange={setMetrics} />
-      </div>
+    <div style={{ height: 'calc(100vh - 112px)', overflow: 'hidden' }}>
+      <Row gutter={16} style={{ height: '100%' }}>
+        {/* Левая панель - Конфигурация */}
+        <Col xs={24} lg={8} style={{ height: '100%', overflowY: 'auto', paddingBottom: 24 }}>
+          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            <ModelSelector
+              selectedModels={selectedModels}
+              onSelectionChange={setSelectedModels}
+            />
+            <BenchmarkSelector
+              selectedBenchmarks={selectedBenchmarks}
+              onSelectionChange={setSelectedBenchmarks}
+            />
+            <DatasetSelector
+              selectedDatasets={selectedDatasets}
+              onSelectionChange={setSelectedDatasets}
+            />
+            <MetricsConfig metrics={metrics} onMetricsChange={setMetrics} />
+          </Space>
+        </Col>
 
-      <div className="results-panel">
-        <div className="results-panel-header">
-          <h2>Панель тестирования</h2>
+        {/* Правая панель - Результаты */}
+        <Col xs={24} lg={16} style={{ height: '100%', overflowY: 'auto', paddingBottom: 24 }}>
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <Card style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+              <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                <div>
+                  <Title level={3} style={{ marginBottom: 8 }}>Панель тестирования</Title>
+                </div>
 
-          <div className="results-selection-summary">
-            <div className="selection-group">
-              <h3>
-                <i className="fas fa-cubes"></i>
-                Выбранные модели
-                <span className="count-badge">{selectedModels.length}</span>
-              </h3>
-              <div className="selected-models-list">
-                {selectedModels.length === 0 ? (
-                  <p className="empty-selection">Модели не выбраны</p>
-                ) : (
-                  <ul>
-                    {selectedModels.map((id) => (
-                      <li key={id}>{id}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
+                {/* Summary выбранных элементов */}
+                <Row gutter={[16, 16]}>
+                  <Col xs={24} md={12}>
+                    <div>
+                      <Space style={{ marginBottom: 8 }}>
+                        <ExperimentOutlined style={{ fontSize: 18, color: '#1890ff' }} />
+                        <Text strong>Выбранные модели</Text>
+                        <Badge 
+                          count={selectedModels.length} 
+                          showZero 
+                          style={{ backgroundColor: '#1890ff' }} 
+                        />
+                      </Space>
+                      <div style={{ 
+                        padding: '12px', 
+                        backgroundColor: '#f5f5f5', 
+                        borderRadius: '6px',
+                        minHeight: '60px'
+                      }}>
+                        {selectedModels.length === 0 ? (
+                          <Text type="secondary">Модели не выбраны</Text>
+                        ) : (
+                          <Space wrap size={[8, 8]}>
+                            {selectedModels.map((id) => (
+                              <Tag key={id} color="blue">{id}</Tag>
+                            ))}
+                          </Space>
+                        )}
+                      </div>
+                    </div>
+                  </Col>
+                  
+                  <Col xs={24} md={12}>
+                    <div>
+                      <Space style={{ marginBottom: 8 }}>
+                        <CheckCircleOutlined style={{ fontSize: 18, color: '#52c41a' }} />
+                        <Text strong>Выбранные тесты</Text>
+                        <Badge 
+                          count={selectedBenchmarks.length} 
+                          showZero 
+                          style={{ backgroundColor: '#52c41a' }} 
+                        />
+                      </Space>
+                      <div style={{ 
+                        padding: '12px', 
+                        backgroundColor: '#f5f5f5', 
+                        borderRadius: '6px',
+                        minHeight: '60px'
+                      }}>
+                        {selectedBenchmarks.length === 0 ? (
+                          <Text type="secondary">Тесты не выбраны</Text>
+                        ) : (
+                          <Space wrap size={[8, 8]}>
+                            {selectedBenchmarks.map((id) => (
+                              <Tag key={id} color="green">{id}</Tag>
+                            ))}
+                          </Space>
+                        )}
+                      </div>
+                    </div>
+                  </Col>
 
-            <div className="selection-group">
-              <h3>
-                <i className="fas fa-tasks"></i>
-                Выбранные тесты
-                <span className="count-badge">{selectedBenchmarks.length}</span>
-              </h3>
-              <div className="selected-benchmarks-list">
-                {selectedBenchmarks.length === 0 ? (
-                  <p className="empty-selection">Тесты не выбраны</p>
-                ) : (
-                  <ul>
-                    {selectedBenchmarks.map((id) => (
-                      <li key={id}>{id}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          </div>
+                  <Col xs={24}>
+                    <div>
+                      <Space style={{ marginBottom: 8 }}>
+                        <DatabaseOutlined style={{ fontSize: 18, color: '#fa8c16' }} />
+                        <Text strong>Выбранные датасеты</Text>
+                        <Badge 
+                          count={selectedDatasets.length} 
+                          showZero 
+                          style={{ backgroundColor: '#fa8c16' }} 
+                        />
+                      </Space>
+                      <div style={{ 
+                        padding: '12px', 
+                        backgroundColor: '#f5f5f5', 
+                        borderRadius: '6px',
+                        minHeight: '60px'
+                      }}>
+                        {selectedDatasets.length === 0 ? (
+                          <Text type="secondary">Датасеты не выбраны</Text>
+                        ) : (
+                          <Space wrap size={[8, 8]}>
+                            {selectedDatasets.map((id) => (
+                              <Tag key={id} color="orange">{id}</Tag>
+                            ))}
+                          </Space>
+                        )}
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
 
-          <div className="results-selection-summary">
-            <div className="selection-group">
-              <h3>
-                <i className="fas fa-table"></i>
-                Выбранные датасеты
-                <span className="count-badge">{selectedDatasets.length}</span>
-              </h3>
-              <div className="selected-datasets-list">
-                {selectedDatasets.length === 0 ? (
-                  <p className="empty-selection">Датасеты не выбраны</p>
-                ) : (
-                  <ul>
-                    {selectedDatasets.map((id) => (
-                      <li key={id}>{id}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          </div>
+                {/* Кнопка запуска */}
+                <div style={{ textAlign: 'center' }}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<PlayCircleOutlined />}
+                    onClick={handleRunBenchmark}
+                    loading={loading}
+                    disabled={loading}
+                  >
+                    {loading ? 'Выполнение...' : 'Запустить тестирование'}
+                  </Button>
+                </div>
+              </Space>
+            </Card>
 
-          <div className="run-controls">
-            <button
-              className="btn btn-primary"
-              onClick={handleRunBenchmark}
-              disabled={loading}
-            >
-              <i className="fas fa-play"></i>
-              {loading ? 'Выполнение...' : 'Запустить тестирование'}
-            </button>
-          </div>
-        </div>
-
-        <div id="resultsContainer">
-          {loading ? (
-            <div className="loading">
-              <div className="loading-spinner"></div>
-              <div className="loading-text">Выполнение тестирования</div>
-              <div className="loading-details">
-                Обработка моделей и вычисление метрик
-              </div>
-            </div>
-          ) : results ? (
-            <ResultsVisualization results={results} />
-          ) : (
-            <div className="empty-results">
-              <i className="fas fa-chart-line"></i>
-              <h3>Готовы к тестированию</h3>
-              <p>
-                Выберите модели, тесты и датасеты, затем запустите тестирование для
-                просмотра результатов
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+            {/* Контейнер результатов */}
+            <Card style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+              {loading ? (
+                <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                  <Spin size="large" />
+                  <div style={{ marginTop: 16 }}>
+                    <Text strong>Выполнение тестирования</Text>
+                    <br />
+                    <Text type="secondary">Обработка моделей и вычисление метрик</Text>
+                  </div>
+                </div>
+              ) : results ? (
+                <ResultsVisualization results={results} />
+              ) : (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={
+                    <Space direction="vertical" size="small">
+                      <Text strong>Готовы к тестированию</Text>
+                      <Text type="secondary">
+                        Выберите модели, тесты и датасеты, затем запустите тестирование
+                      </Text>
+                    </Space>
+                  }
+                  style={{ padding: '40px 0' }}
+                />
+              )}
+            </Card>
+          </Space>
+        </Col>
+      </Row>
     </div>
   );
 };

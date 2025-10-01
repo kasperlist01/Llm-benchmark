@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { Card, Button, Typography, Space, Spin, Modal, Form, Input, Select, Avatar, List, Divider, message, Row, Col } from 'antd';
+import { UserOutlined, LockOutlined, KeyOutlined, ApiOutlined, DeleteOutlined, PlusOutlined, SaveOutlined, SafetyOutlined } from '@ant-design/icons';
 import { settingsAPI, modelsAPI } from '../services/api';
 import { APIIntegration, UserModel } from '../types';
-import { showNotification } from '../utils/notifications';
 import { useAuth } from '../contexts/AuthContext';
+
+const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
 
 const Settings: React.FC = () => {
   const { user } = useAuth();
@@ -10,37 +14,15 @@ const Settings: React.FC = () => {
   const [models, setModels] = useState<UserModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [showApiModal, setShowApiModal] = useState(false);
-  
   const [judgeModelId, setJudgeModelId] = useState<string>('0');
   
-  const [passwordForm, setPasswordForm] = useState({
-    current_password: '',
-    new_password: '',
-    confirm_password: '',
-  });
-
-  const [apiFormData, setApiFormData] = useState({
-    name: '',
-    api_url: '',
-    api_key: '',
-    description: '',
-  });
+  const [passwordForm] = Form.useForm();
+  const [apiForm] = Form.useForm();
+  const [judgeForm] = Form.useForm();
 
   useEffect(() => {
     loadData();
   }, []);
-
-  useEffect(() => {
-    if (showApiModal) {
-      document.body.classList.add('modal-open');
-    } else {
-      document.body.classList.remove('modal-open');
-    }
-    
-    return () => {
-      document.body.classList.remove('modal-open');
-    };
-  }, [showApiModal]);
 
   const loadData = async () => {
     try {
@@ -51,371 +33,402 @@ const Settings: React.FC = () => {
       ]);
       setIntegrations(Array.isArray(integrationsData) ? integrationsData : []);
       setModels(Array.isArray(modelsData) ? modelsData : []);
-      setJudgeModelId(settingsData.judge_model_id ? String(settingsData.judge_model_id) : '0');
+      const judgeId = settingsData.judge_model_id ? String(settingsData.judge_model_id) : '0';
+      setJudgeModelId(judgeId);
+      judgeForm.setFieldsValue({ judge_model_id: judgeId });
     } catch (error) {
       console.error('Error loading data:', error);
+      message.error('Ошибка загрузки данных');
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (passwordForm.new_password !== passwordForm.confirm_password) {
-      showNotification({
-        message: 'Новые пароли не совпадают',
-        type: 'error',
-        title: 'Ошибка',
-      });
-      return;
-    }
-
+  const handlePasswordSubmit = async (values: any) => {
     try {
-      await settingsAPI.changePassword(passwordForm);
-      showNotification({
-        message: 'Пароль успешно обновлен!',
-        type: 'success',
-        title: 'Успех',
+      await settingsAPI.changePassword({
+        current_password: values.current_password,
+        new_password: values.new_password,
+        confirm_password: values.confirm_password,
       });
-      setPasswordForm({ current_password: '', new_password: '', confirm_password: '' });
+      message.success('Пароль успешно обновлен!');
+      passwordForm.resetFields();
     } catch (error: any) {
-      showNotification({
-        message: error.response?.data?.error || 'Ошибка при смене пароля',
-        type: 'error',
-        title: 'Ошибка',
-      });
+      message.error(error.response?.data?.error || 'Ошибка при смене пароля');
     }
   };
 
-  const handleApiSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleApiSubmit = async (values: any) => {
     try {
-      await settingsAPI.addIntegration(apiFormData);
-      showNotification({
-        message: 'API интеграция успешно добавлена!',
-        type: 'success',
-        title: 'Успех',
-      });
+      await settingsAPI.addIntegration(values);
+      message.success('API интеграция успешно добавлена!');
       setShowApiModal(false);
-      setApiFormData({ name: '', api_url: '', api_key: '', description: '' });
+      apiForm.resetFields();
       loadData();
     } catch (error: any) {
-      showNotification({
-        message: error.response?.data?.error || 'Ошибка при добавлении интеграции',
-        type: 'error',
-        title: 'Ошибка',
-      });
+      message.error(error.response?.data?.error || 'Ошибка при добавлении интеграции');
     }
   };
 
   const handleDeleteIntegration = async (integrationId: number) => {
-    if (!window.confirm('Вы уверены?')) {
-      return;
-    }
-
-    try {
-      await settingsAPI.deleteIntegration(integrationId);
-      showNotification({
-        message: 'API интеграция успешно удалена',
-        type: 'success',
-        title: 'Успех',
-      });
-      loadData();
-    } catch (error: any) {
-      showNotification({
-        message: error.response?.data?.error || 'Ошибка при удалении интеграции',
-        type: 'error',
-        title: 'Ошибка',
-      });
-    }
+    Modal.confirm({
+      title: 'Подтверждение удаления',
+      content: 'Вы уверены, что хотите удалить эту API интеграцию?',
+      okText: 'Удалить',
+      okType: 'danger',
+      cancelText: 'Отмена',
+      onOk: async () => {
+        try {
+          await settingsAPI.deleteIntegration(integrationId);
+          message.success('API интеграция успешно удалена');
+          loadData();
+        } catch (error: any) {
+          message.error(error.response?.data?.error || 'Ошибка при удалении интеграции');
+        }
+      },
+    });
   };
 
-  const handleSaveJudgeModel = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSaveJudgeModel = async (values: any) => {
     try {
       await settingsAPI.updateSettings({
-        judge_model_id: judgeModelId === '0' ? null : parseInt(judgeModelId),
+        judge_model_id: values.judge_model_id === '0' ? null : parseInt(values.judge_model_id),
       });
-      showNotification({
-        message: 'Настройки модели-судьи сохранены!',
-        type: 'success',
-        title: 'Успех',
-      });
+      message.success('Настройки модели-судьи сохранены!');
     } catch (error: any) {
-      showNotification({
-        message: error.response?.data?.error || 'Ошибка при сохранении настроек',
-        type: 'error',
-        title: 'Ошибка',
-      });
+      message.error(error.response?.data?.error || 'Ошибка при сохранении настроек');
     }
   };
 
   if (loading) {
     return (
-      <div className="loading">
-        <div className="loading-spinner"></div>
-        <div className="loading-text">Загрузка...</div>
+      <div style={{ textAlign: 'center', padding: '60px 0' }}>
+        <Spin size="large" />
+        <div style={{ marginTop: 16 }}>
+          <Text>Загрузка...</Text>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="settings-container">
-      <div className="settings-header">
-        <i className="fas fa-cog"></i>
-        <h1>Настройки пользователя</h1>
-      </div>
-
-      <div className="settings-grid">
-        {/* Profile Card */}
-        <div className="settings-card">
-          <h2>
-            <i className="fas fa-user-circle"></i> Профиль
-          </h2>
-          <p>Управление личной информацией и предпочтениями</p>
-
-          <div className="profile-avatar">{user?.username?.charAt(0).toUpperCase() || 'U'}</div>
-
-          <div className="profile-info">
-            <h3>{user?.username || 'Username'}</h3>
-            <p>ID пользователя: {user?.id || 'N/A'}</p>
-          </div>
-
-          <div className="api-integration">
-            <h3>Интеграции API</h3>
-            <p>Управление API-ключами и подключениями для интеграции с внешними сервисами</p>
-            <button className="api-btn" onClick={() => setShowApiModal(true)}>
-              <i className="fas fa-plus"></i> Добавить интеграцию
-            </button>
-
-            {integrations.length > 0 && (
-              <div className="api-integrations-list">
-                {integrations.map((integration) => (
-                  <div key={integration.id} className="api-integration-item">
-                    <div>
-                      <h4>{integration.name}</h4>
-                      <p>{integration.api_url}</p>
-                      {integration.description && <p>{integration.description}</p>}
-                    </div>
-                    <div className="api-integration-actions">
-                      <button
-                        className="btn-small btn-delete"
-                        onClick={() => handleDeleteIntegration(integration.id)}
-                      >
-                        <i className="fas fa-trash"></i>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <div>
+          <Title level={2} style={{ marginBottom: 8 }}>Настройки</Title>
+          <Text type="secondary">Управление профилем и настройками безопасности</Text>
         </div>
 
-        {/* Security Card */}
-        <div className="settings-card">
-          <h2>
-            <i className="fas fa-key"></i> Безопасность
-          </h2>
-          <p>Обновите пароль и управляйте настройками безопасности</p>
+        <Row gutter={[16, 16]}>
+          {/* Профиль */}
+          <Col xs={24} lg={12}>
+            <Card
+              title={
+                <Space>
+                  <UserOutlined />
+                  <span>Профиль</span>
+                </Space>
+              }
+              style={{ height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+            >
+              <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <Avatar
+                    size={80}
+                    style={{ backgroundColor: '#1890ff', fontSize: 32 }}
+                  >
+                    {user?.username?.charAt(0).toUpperCase() || 'U'}
+                  </Avatar>
+                  <Title level={4} style={{ marginTop: 16, marginBottom: 4 }}>
+                    {user?.username || 'Username'}
+                  </Title>
+                  <Text type="secondary">ID: {user?.id || 'N/A'}</Text>
+                </div>
 
-          <form onSubmit={handlePasswordSubmit}>
-            <div className="form-group">
-              <label htmlFor="current_password">
-                <i className="fas fa-lock"></i> Текущий пароль
-              </label>
-              <input
-                type="password"
-                id="current_password"
-                className="form-control"
-                placeholder="Введите текущий пароль"
-                value={passwordForm.current_password}
-                onChange={(e) =>
-                  setPasswordForm({ ...passwordForm, current_password: e.target.value })
-                }
-                required
-              />
-            </div>
+                <Divider />
 
-            <div className="form-divider"></div>
+                <div>
+                  <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <Text strong>
+                      <ApiOutlined /> API Интеграции
+                    </Text>
+                    <Button
+                      type="primary"
+                      size="small"
+                      icon={<PlusOutlined />}
+                      onClick={() => setShowApiModal(true)}
+                    >
+                      Добавить
+                    </Button>
+                  </Space>
+                  <Text type="secondary" style={{ fontSize: 13 }}>
+                    Управление API-ключами для внешних сервисов
+                  </Text>
 
-            <div className="form-group">
-              <label htmlFor="new_password">
-                <i className="fas fa-key"></i> Новый пароль
-              </label>
-              <input
-                type="password"
-                id="new_password"
-                className="form-control"
-                placeholder="Введите новый пароль"
-                value={passwordForm.new_password}
-                onChange={(e) =>
-                  setPasswordForm({ ...passwordForm, new_password: e.target.value })
-                }
-                required
-              />
-            </div>
+                  {integrations.length > 0 ? (
+                    <List
+                      style={{ marginTop: 12 }}
+                      dataSource={integrations}
+                      renderItem={(integration) => (
+                        <List.Item
+                          actions={[
+                            <Button
+                              type="text"
+                              danger
+                              size="small"
+                              icon={<DeleteOutlined />}
+                              onClick={() => handleDeleteIntegration(integration.id)}
+                            />
+                          ]}
+                        >
+                          <List.Item.Meta
+                            title={<Text strong>{integration.name}</Text>}
+                            description={
+                              <Space direction="vertical" size={0}>
+                                <Text style={{ fontSize: 12 }} type="secondary">
+                                  {integration.api_url}
+                                </Text>
+                                {integration.description && (
+                                  <Text style={{ fontSize: 12 }} type="secondary">
+                                    {integration.description}
+                                  </Text>
+                                )}
+                              </Space>
+                            }
+                          />
+                        </List.Item>
+                      )}
+                    />
+                  ) : (
+                    <div style={{ 
+                      marginTop: 12, 
+                      padding: '16px', 
+                      backgroundColor: '#f5f5f5', 
+                      borderRadius: '6px',
+                      textAlign: 'center'
+                    }}>
+                      <Text type="secondary">Нет интеграций</Text>
+                    </div>
+                  )}
+                </div>
+              </Space>
+            </Card>
+          </Col>
 
-            <div className="form-group">
-              <label htmlFor="confirm_password">
-                <i className="fas fa-check-circle"></i> Подтвердите пароль
-              </label>
-              <input
-                type="password"
-                id="confirm_password"
-                className="form-control"
-                placeholder="Подтвердите новый пароль"
-                value={passwordForm.confirm_password}
-                onChange={(e) =>
-                  setPasswordForm({ ...passwordForm, confirm_password: e.target.value })
-                }
-                required
-              />
-            </div>
+          {/* Безопасность */}
+          <Col xs={24} lg={12}>
+            <Card
+              title={
+                <Space>
+                  <LockOutlined />
+                  <span>Безопасность</span>
+                </Space>
+              }
+              style={{ height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+            >
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                  Обновите пароль и управляйте настройками безопасности
+                </Paragraph>
 
-            <div className="password-requirements">
-              <strong>Требования к паролю:</strong>
-              <ul>
-                <li>Не менее 6 символов</li>
-                <li>Включает заглавные и строчные буквы</li>
-                <li>Включает как минимум одну цифру</li>
-                <li>Включает как минимум один специальный символ</li>
-              </ul>
-            </div>
-
-            <div className="form-group">
-              <button type="submit" className="btn btn-primary btn-submit-password">
-                Изменить пароль
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {/* Judge Model Card */}
-        <div className="settings-card full-width-card">
-          <h2>
-            <i className="fas fa-gavel"></i> Настройки модели-судьи
-          </h2>
-          <p>Выберите модель, которая будет использоваться для автоматической оценки других моделей</p>
-
-          <div className="judge-model-section">
-            <form onSubmit={handleSaveJudgeModel}>
-              <div className="form-group">
-                <label htmlFor="judge_model_id">
-                  <i className="fas fa-robot"></i> Модель-судья
-                </label>
-                <select
-                  id="judge_model_id"
-                  className="form-control styled-select"
-                  value={judgeModelId}
-                  onChange={(e) => setJudgeModelId(e.target.value)}
+                <Form
+                  form={passwordForm}
+                  layout="vertical"
+                  onFinish={handlePasswordSubmit}
                 >
-                  <option value="0">Не выбрано</option>
-                  {models.map((model) => {
-                    const modelIdNum = parseInt(model.id.replace('custom_', ''));
-                    return (
-                      <option key={model.id} value={modelIdNum}>
-                        {model.name}
-                      </option>
-                    );
-                  })}
-                </select>
-                <small className="form-text text-muted">
-                  Только модели с настроенными API интеграциями могут выступать в роли судьи
-                </small>
-              </div>
+                  <Form.Item
+                    name="current_password"
+                    label="Текущий пароль"
+                    rules={[{ required: true, message: 'Введите текущий пароль' }]}
+                  >
+                    <Input.Password
+                      prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
+                      placeholder="Введите текущий пароль"
+                    />
+                  </Form.Item>
 
-              <div className="form-group">
-                <button type="submit" className="btn btn-primary">
-                  Сохранить настройки судьи
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
+                  <Form.Item
+                    name="new_password"
+                    label="Новый пароль"
+                    rules={[
+                      { required: true, message: 'Введите новый пароль' },
+                      { min: 6, message: 'Минимум 6 символов' },
+                    ]}
+                  >
+                    <Input.Password
+                      prefix={<KeyOutlined style={{ color: '#bfbfbf' }} />}
+                      placeholder="Введите новый пароль"
+                    />
+                  </Form.Item>
 
-      {/* API Integration Modal */}
-      {showApiModal && (
-        <div
-          className="modal"
-          style={{ display: 'block' }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowApiModal(false);
-            }
-          }}
-        >
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>Добавить API интеграцию</h2>
-              <span className="close" onClick={() => setShowApiModal(false)}>
-                &times;
-              </span>
-            </div>
-            <div className="modal-body">
-              <form onSubmit={handleApiSubmit}>
-                <div className="form-group">
-                  <label>Название</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="OpenAI, Anthropic, Custom API..."
-                    value={apiFormData.name}
-                    onChange={(e) => setApiFormData({ ...apiFormData, name: e.target.value })}
-                    required
-                  />
-                </div>
+                  <Form.Item
+                    name="confirm_password"
+                    label="Подтвердите пароль"
+                    dependencies={['new_password']}
+                    rules={[
+                      { required: true, message: 'Подтвердите новый пароль' },
+                      ({ getFieldValue }) => ({
+                        validator(_, value) {
+                          if (!value || getFieldValue('new_password') === value) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(new Error('Пароли не совпадают'));
+                        },
+                      }),
+                    ]}
+                  >
+                    <Input.Password
+                      prefix={<SafetyOutlined style={{ color: '#bfbfbf' }} />}
+                      placeholder="Подтвердите новый пароль"
+                    />
+                  </Form.Item>
 
-                <div className="form-group">
-                  <label>API URL</label>
-                  <input
-                    type="url"
-                    className="form-control"
-                    placeholder="https://api.openai.com/v1"
-                    value={apiFormData.api_url}
-                    onChange={(e) => setApiFormData({ ...apiFormData, api_url: e.target.value })}
-                    required
-                  />
-                </div>
+                  <div style={{ 
+                    padding: '12px', 
+                    backgroundColor: '#f0f5ff', 
+                    borderRadius: '6px',
+                    border: '1px solid #d6e4ff',
+                    marginBottom: 16
+                  }}>
+                    <Text strong style={{ fontSize: 13 }}>Требования к паролю:</Text>
+                    <ul style={{ 
+                      marginTop: 8, 
+                      marginBottom: 0, 
+                      paddingLeft: 20,
+                      fontSize: 12
+                    }}>
+                      <li>Не менее 6 символов</li>
+                      <li>Включает заглавные и строчные буквы</li>
+                      <li>Включает как минимум одну цифру</li>
+                    </ul>
+                  </div>
 
-                <div className="form-group">
-                  <label>API Key</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    placeholder="sk-..."
-                    value={apiFormData.api_key}
-                    onChange={(e) => setApiFormData({ ...apiFormData, api_key: e.target.value })}
-                  />
-                </div>
+                  <Form.Item style={{ marginBottom: 0 }}>
+                    <Button type="primary" htmlType="submit" block>
+                      Изменить пароль
+                    </Button>
+                  </Form.Item>
+                </Form>
+              </Space>
+            </Card>
+          </Col>
 
-                <div className="form-group">
-                  <label>Описание</label>
-                  <textarea
-                    className="form-control"
-                    placeholder="Описание интеграции"
-                    rows={3}
-                    value={apiFormData.description}
-                    onChange={(e) =>
-                      setApiFormData({ ...apiFormData, description: e.target.value })
-                    }
-                  />
-                </div>
+          {/* Модель-судья */}
+          <Col xs={24}>
+            <Card
+              title={
+                <Space>
+                  <ApiOutlined />
+                  <span>Настройки модели-судьи</span>
+                </Space>
+              }
+              style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+            >
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                  Выберите модель, которая будет использоваться для автоматической оценки других моделей
+                </Paragraph>
 
-                <div className="form-actions">
-                  <button type="submit" className="btn btn-primary">
-                    Добавить интеграцию
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+                <Form
+                  form={judgeForm}
+                  layout="vertical"
+                  onFinish={handleSaveJudgeModel}
+                  initialValues={{ judge_model_id: judgeModelId }}
+                >
+                  <Row gutter={16}>
+                    <Col xs={24} md={16}>
+                      <Form.Item
+                        name="judge_model_id"
+                        label="Модель-судья"
+                        extra="Только модели с настроенными API интеграциями могут выступать в роли судьи"
+                      >
+                        <Select size="large">
+                          <Select.Option value="0">Не выбрано</Select.Option>
+                          {models.map((model) => {
+                            const modelIdNum = parseInt(model.id.replace('custom_', ''));
+                            return (
+                              <Select.Option key={model.id} value={String(modelIdNum)}>
+                                {model.name}
+                              </Select.Option>
+                            );
+                          })}
+                        </Select>
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Form.Item label=" " style={{ marginBottom: 0 }}>
+                        <Button
+                          type="primary"
+                          htmlType="submit"
+                          icon={<SaveOutlined />}
+                          size="large"
+                          block
+                        >
+                          Сохранить
+                        </Button>
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                </Form>
+              </Space>
+            </Card>
+          </Col>
+        </Row>
+      </Space>
+
+      <Modal
+        title="Добавить API интеграцию"
+        open={showApiModal}
+        onCancel={() => {
+          setShowApiModal(false);
+          apiForm.resetFields();
+        }}
+        footer={null}
+        width={600}
+      >
+        <Form form={apiForm} layout="vertical" onFinish={handleApiSubmit}>
+          <Form.Item
+            name="name"
+            label="Название"
+            rules={[{ required: true, message: 'Введите название' }]}
+          >
+            <Input placeholder="OpenAI, Anthropic, Custom API..." size="large" />
+          </Form.Item>
+
+          <Form.Item
+            name="api_url"
+            label="API URL"
+            rules={[
+              { required: true, message: 'Введите API URL' },
+              { type: 'url', message: 'Введите корректный URL' },
+            ]}
+          >
+            <Input placeholder="https://api.openai.com/v1" size="large" />
+          </Form.Item>
+
+          <Form.Item name="api_key" label="API Key">
+            <Input.Password placeholder="sk-..." size="large" />
+          </Form.Item>
+
+          <Form.Item name="description" label="Описание">
+            <TextArea rows={3} placeholder="Описание интеграции" />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+              <Button onClick={() => {
+                setShowApiModal(false);
+                apiForm.resetFields();
+              }}>
+                Отмена
+              </Button>
+              <Button type="primary" htmlType="submit">
+                Добавить интеграцию
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

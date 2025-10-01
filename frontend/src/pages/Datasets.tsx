@@ -1,41 +1,25 @@
 import React, { useEffect, useState } from 'react';
+import { Card, Button, Typography, Space, Empty, Spin, Modal, Form, Input, Upload, Table, message, Row, Col } from 'antd';
+import { PlusOutlined, DeleteOutlined, UploadOutlined, EditOutlined, DatabaseOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import type { UploadFile } from 'antd/es/upload/interface';
 import { datasetsAPI } from '../services/api';
 import { UserDataset } from '../types';
-import { showNotification } from '../utils/notifications';
+
+const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 const Datasets: React.FC = () => {
   const [datasets, setDatasets] = useState<UserDataset[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showWebModal, setShowWebModal] = useState(false);
-
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    csv_file: null as File | null,
-  });
-
-  const [webDatasetData, setWebDatasetData] = useState({
-    name: '',
-    description: '',
-    rows: [{ prompt: '', reference: '' }] as Array<{ prompt: string; reference: string }>,
-  });
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [form] = Form.useForm();
+  const [webForm] = Form.useForm();
 
   useEffect(() => {
     loadData();
   }, []);
-
-  useEffect(() => {
-    if (showModal || showWebModal) {
-      document.body.classList.add('modal-open');
-    } else {
-      document.body.classList.remove('modal-open');
-    }
-    
-    return () => {
-      document.body.classList.remove('modal-open');
-    };
-  }, [showModal, showWebModal]);
 
   const loadData = async () => {
     try {
@@ -43,406 +27,377 @@ const Datasets: React.FC = () => {
       setDatasets(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading datasets:', error);
+      message.error('Ошибка загрузки данных');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData({ ...formData, csv_file: e.target.files[0] });
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.csv_file) {
-      showNotification({
-        message: 'Пожалуйста, выберите CSV файл',
-        type: 'error',
-        title: 'Ошибка',
-      });
+  const handleSubmit = async (values: any) => {
+    if (fileList.length === 0) {
+      message.error('Пожалуйста, выберите CSV файл');
       return;
     }
 
-    const formDataToSend = new FormData();
-    formDataToSend.append('name', formData.name);
-    formDataToSend.append('description', formData.description);
-    formDataToSend.append('csv_file', formData.csv_file);
+    const formData = new FormData();
+    formData.append('name', values.name);
+    formData.append('description', values.description || '');
+    formData.append('csv_file', fileList[0].originFileObj as File);
 
     try {
-      await datasetsAPI.addDataset(formDataToSend);
-      showNotification({
-        message: 'Датасет успешно загружен!',
-        type: 'success',
-        title: 'Успех',
-      });
+      await datasetsAPI.addDataset(formData);
+      message.success('Датасет успешно загружен!');
       setShowModal(false);
-      setFormData({ name: '', description: '', csv_file: null });
+      form.resetFields();
+      setFileList([]);
       loadData();
     } catch (error: any) {
-      showNotification({
-        message: error.response?.data?.error || 'Ошибка при загрузке датасета',
-        type: 'error',
-        title: 'Ошибка',
-      });
+      message.error(error.response?.data?.error || 'Ошибка при загрузке датасета');
     }
   };
 
   const handleDelete = async (datasetId: number) => {
-    if (!window.confirm('Вы уверены, что хотите удалить этот датасет?')) {
-      return;
-    }
-
-    try {
-      await datasetsAPI.deleteDataset(datasetId);
-      showNotification({
-        message: 'Датасет успешно удален',
-        type: 'success',
-        title: 'Успех',
-      });
-      loadData();
-    } catch (error: any) {
-      showNotification({
-        message: error.response?.data?.error || 'Ошибка при удалении датасета',
-        type: 'error',
-        title: 'Ошибка',
-      });
-    }
+    Modal.confirm({
+      title: 'Подтверждение удаления',
+      content: 'Вы уверены, что хотите удалить этот датасет?',
+      okText: 'Удалить',
+      okType: 'danger',
+      cancelText: 'Отмена',
+      onOk: async () => {
+        try {
+          await datasetsAPI.deleteDataset(datasetId);
+          message.success('Датасет успешно удален');
+          loadData();
+        } catch (error: any) {
+          message.error(error.response?.data?.error || 'Ошибка при удалении датасета');
+        }
+      },
+    });
   };
 
-  const handleWebDatasetSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!webDatasetData.name) {
-      showNotification({
-        message: 'Пожалуйста, укажите название датасета',
-        type: 'error',
-        title: 'Ошибка',
-      });
-      return;
-    }
-
-    const validRows = webDatasetData.rows.filter(row => row.prompt.trim() !== '' || row.reference.trim() !== '');
+  const handleWebDatasetSubmit = async (values: any) => {
+    const validRows = values.rows.filter((row: any) => row?.prompt?.trim() || row?.reference?.trim());
     
     if (validRows.length === 0) {
-      showNotification({
-        message: 'Добавьте хотя бы одну строку с данными',
-        type: 'error',
-        title: 'Ошибка',
-      });
+      message.error('Добавьте хотя бы одну строку с данными');
       return;
     }
 
     try {
       await datasetsAPI.addDatasetFromWeb({
-        name: webDatasetData.name,
-        description: webDatasetData.description,
+        name: values.name,
+        description: values.description || '',
         rows: validRows,
       });
-      showNotification({
-        message: 'Датасет успешно создан!',
-        type: 'success',
-        title: 'Успех',
-      });
+      message.success('Датасет успешно создан!');
       setShowWebModal(false);
-      setWebDatasetData({
-        name: '',
-        description: '',
-        rows: [{ prompt: '', reference: '' }],
-      });
+      webForm.resetFields();
       loadData();
     } catch (error: any) {
-      showNotification({
-        message: error.response?.data?.error || 'Ошибка при создании датасета',
-        type: 'error',
-        title: 'Ошибка',
-      });
+      message.error(error.response?.data?.error || 'Ошибка при создании датасета');
     }
-  };
-
-  const addRow = () => {
-    setWebDatasetData({
-      ...webDatasetData,
-      rows: [...webDatasetData.rows, { prompt: '', reference: '' }],
-    });
-  };
-
-  const removeRow = (index: number) => {
-    if (webDatasetData.rows.length > 1) {
-      const newRows = webDatasetData.rows.filter((_, i) => i !== index);
-      setWebDatasetData({ ...webDatasetData, rows: newRows });
-    }
-  };
-
-  const updateRow = (index: number, field: 'prompt' | 'reference', value: string) => {
-    const newRows = [...webDatasetData.rows];
-    newRows[index][field] = value;
-    setWebDatasetData({ ...webDatasetData, rows: newRows });
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
   };
 
   if (loading) {
     return (
-      <div className="loading">
-        <div className="loading-spinner"></div>
-        <div className="loading-text">Загрузка...</div>
+      <div style={{ textAlign: 'center', padding: '60px 0' }}>
+        <Spin size="large" />
+        <div style={{ marginTop: 16 }}>
+          <Text>Загрузка...</Text>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="user-models-container">
-      <div className="page-header">
-        <h1>Мои датасеты</h1>
-      </div>
+    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <Title level={2} style={{ marginBottom: 8 }}>Мои датасеты</Title>
+            <Text type="secondary">Управление вашими датасетами для тестирования</Text>
+          </div>
+          <Space>
+            <Button
+              type="primary"
+              icon={<UploadOutlined />}
+              size="large"
+              onClick={() => setShowModal(true)}
+            >
+              Загрузить CSV
+            </Button>
+            <Button
+              icon={<EditOutlined />}
+              size="large"
+              onClick={() => setShowWebModal(true)}
+            >
+              Создать в браузере
+            </Button>
+          </Space>
+        </div>
 
-      {datasets.length > 0 ? (
-        <>
-          <div className="models-list">
+        {datasets.length > 0 ? (
+          <Row gutter={[16, 16]}>
             {datasets.map((dataset) => {
               const datasetIdNum = parseInt(dataset.id.replace('dataset_', ''));
               return (
-                <div key={dataset.id} className="model-card">
-                  <div className="model-header">
-                    <div className="model-icon" style={{ backgroundColor: '#4CAF50' }}>
-                      <i className="fas fa-table"></i>
-                    </div>
-                    <div className="model-info">
-                      <h3>{dataset.name}</h3>
-                      <p>{dataset.description || 'Описание отсутствует'}</p>
-                    </div>
-                  </div>
-                  <div className="model-details">
-                    <div className="model-endpoint">
-                      <span className="label">Строк:</span>
-                      <span className="value">{dataset.row_count || 'N/A'}</span>
-                    </div>
-                    {dataset.file_path && (
-                      <div className="model-endpoint">
-                        <span className="label">Файл:</span>
-                        <span className="value">{dataset.file_path.split('/').pop()}</span>
+                <Col xs={24} sm={12} md={8} lg={6} key={dataset.id}>
+                  <Card
+                    hoverable
+                    style={{ height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+                  >
+                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                        <div
+                          style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: '8px',
+                            backgroundColor: '#52c41a',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#fff',
+                            fontSize: 20,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <DatabaseOutlined />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <Text strong style={{ fontSize: 16 }}>{dataset.name}</Text>
+                          <div style={{ marginTop: 4 }}>
+                            <Text type="secondary" style={{ fontSize: 13 }}>
+                              {dataset.description || 'Описание отсутствует'}
+                            </Text>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                  <div className="model-actions">
-                    <button className="btn btn-danger" onClick={() => handleDelete(datasetIdNum)}>
-                      <i className="fas fa-trash-alt"></i> Удалить
-                    </button>
-                  </div>
-                </div>
+
+                      <div style={{ 
+                        padding: '12px', 
+                        backgroundColor: '#f5f5f5', 
+                        borderRadius: '6px' 
+                      }}>
+                        <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                          <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                            <Text type="secondary" style={{ fontSize: 12 }}>Строк:</Text>
+                            <Text strong>{dataset.row_count || 'N/A'}</Text>
+                          </Space>
+                          {dataset.file_path && (
+                            <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                              <Text type="secondary" style={{ fontSize: 12 }}>Файл:</Text>
+                              <Text style={{ fontSize: 12 }} ellipsis>
+                                {dataset.file_path.split('/').pop()}
+                              </Text>
+                            </Space>
+                          )}
+                        </Space>
+                      </div>
+
+                      <Button
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => handleDelete(datasetIdNum)}
+                        block
+                      >
+                        Удалить
+                      </Button>
+                    </Space>
+                  </Card>
+                </Col>
               );
             })}
-          </div>
+          </Row>
+        ) : (
+          <Card style={{ textAlign: 'center', padding: '40px 0' }}>
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <Space direction="vertical" size="small">
+                  <Text strong>Нет датасетов</Text>
+                  <Text type="secondary">
+                    Добавьте CSV датасеты для использования в тестировании моделей
+                  </Text>
+                </Space>
+              }
+            >
+              <Space>
+                <Button
+                  type="primary"
+                  icon={<UploadOutlined />}
+                  onClick={() => setShowModal(true)}
+                >
+                  Загрузить CSV
+                </Button>
+                <Button
+                  icon={<EditOutlined />}
+                  onClick={() => setShowWebModal(true)}
+                >
+                  Создать в браузере
+                </Button>
+              </Space>
+            </Empty>
+          </Card>
+        )}
+      </Space>
 
-          <div className="models-footer" style={{ marginTop: '32px', textAlign: 'center', display: 'flex', gap: '12px', justifyContent: 'center' }}>
-            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-              <i className="fas fa-file-upload"></i> Загрузить CSV
-            </button>
-            <button className="btn btn-secondary" onClick={() => setShowWebModal(true)}>
-              <i className="fas fa-edit"></i> Создать в браузере
-            </button>
-          </div>
-        </>
-      ) : (
-        <div className="empty-models">
-          <i className="fas fa-table fa-4x"></i>
-          <h3>Пока нет датасетов</h3>
-          <p>Добавьте CSV датасеты для использования в тестировании моделей</p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '20px' }}>
-            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-              <i className="fas fa-file-upload"></i> Загрузить CSV
-            </button>
-            <button className="btn btn-secondary" onClick={() => setShowWebModal(true)}>
-              <i className="fas fa-edit"></i> Создать в браузере
-            </button>
-          </div>
-        </div>
-      )}
+      <Modal
+        title="Добавить датасет"
+        open={showModal}
+        onCancel={() => {
+          setShowModal(false);
+          form.resetFields();
+          setFileList([]);
+        }}
+        footer={null}
+        width={600}
+      >
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <Form.Item
+            name="name"
+            label="Название датасета"
+            rules={[{ required: true, message: 'Введите название датасета' }]}
+          >
+            <Input placeholder="Например: Тестовые вопросы" size="large" />
+          </Form.Item>
 
-      {showModal && (
-        <div className="modal" style={{ display: 'block' }} onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            setShowModal(false);
-          }
-        }}>
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>Добавить датасет</h2>
-              <span className="close" onClick={() => setShowModal(false)}>
-                &times;
-              </span>
-            </div>
-            <div className="modal-body">
-              <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                  <label>Название датасета</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Например: Тестовые вопросы"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
-                </div>
+          <Form.Item name="description" label="Описание">
+            <TextArea rows={3} placeholder="Краткое описание датасета" />
+          </Form.Item>
 
-                <div className="form-group">
-                  <label>Описание</label>
-                  <textarea
-                    className="form-control"
-                    placeholder="Краткое описание датасета"
-                    rows={2}
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  />
-                </div>
+          <Form.Item
+            label="CSV файл"
+            required
+            extra="Загрузите CSV файл с колонками для prompts и reference answers"
+          >
+            <Upload
+              maxCount={1}
+              fileList={fileList}
+              onChange={({ fileList }) => setFileList(fileList)}
+              beforeUpload={() => false}
+              accept=".csv"
+            >
+              <Button icon={<UploadOutlined />} size="large" block>
+                Выбрать файл
+              </Button>
+            </Upload>
+          </Form.Item>
 
-                <div className="form-group">
-                  <label>CSV файл</label>
-                  <input
-                    type="file"
-                    className="form-control"
-                    accept=".csv"
-                    onChange={handleFileChange}
-                    required
-                  />
-                  <small className="form-text text-muted">
-                    Загрузите CSV файл с колонками для prompts и reference answers
-                  </small>
-                </div>
+          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+              <Button onClick={() => {
+                setShowModal(false);
+                form.resetFields();
+                setFileList([]);
+              }}>
+                Отмена
+              </Button>
+              <Button type="primary" htmlType="submit">
+                Загрузить датасет
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
 
-                <div className="form-actions">
-                  <button type="submit" className="btn btn-primary">
-                    Загрузить датасет
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showWebModal && (
-        <div
-          className="modal modal-large"
-          style={{ display: 'block' }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowWebModal(false);
-            }
-          }}
+      <Modal
+        title="Создать датасет в браузере"
+        open={showWebModal}
+        onCancel={() => {
+          setShowWebModal(false);
+          webForm.resetFields();
+        }}
+        footer={null}
+        width={900}
+      >
+        <Form
+          form={webForm}
+          layout="vertical"
+          onFinish={handleWebDatasetSubmit}
+          initialValues={{ rows: [{ prompt: '', reference: '' }] }}
         >
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>Создать датасет в браузере</h2>
-              <span className="close" onClick={() => setShowWebModal(false)}>
-                &times;
-              </span>
-            </div>
-            <div className="modal-body">
-              <form onSubmit={handleWebDatasetSubmit}>
-                <div className="form-group">
-                  <label>Название датасета</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Например: Тестовые вопросы"
-                    value={webDatasetData.name}
-                    onChange={(e) =>
-                      setWebDatasetData({ ...webDatasetData, name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
+          <Form.Item
+            name="name"
+            label="Название датасета"
+            rules={[{ required: true, message: 'Введите название датасета' }]}
+          >
+            <Input placeholder="Например: Тестовые вопросы" size="large" />
+          </Form.Item>
 
-                <div className="form-group">
-                  <label>Описание</label>
-                  <textarea
-                    className="form-control"
-                    placeholder="Краткое описание датасета"
-                    rows={2}
-                    value={webDatasetData.description}
-                    onChange={(e) =>
-                      setWebDatasetData({ ...webDatasetData, description: e.target.value })
-                    }
-                  />
-                </div>
+          <Form.Item name="description" label="Описание">
+            <TextArea rows={2} placeholder="Краткое описание датасета" />
+          </Form.Item>
 
-                <div className="form-group">
-                  <label>Данные</label>
-                  <div style={{ overflowX: 'auto', marginBottom: '12px' }}>
-                    <table className="preview-table">
-                      <thead>
-                        <tr>
-                          <th style={{ width: '5%' }}>#</th>
-                          <th style={{ width: '42%' }}>Prompt (запрос)</th>
-                          <th style={{ width: '42%' }}>Reference (эталон)</th>
-                          <th style={{ width: '11%' }}>Действия</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {webDatasetData.rows.map((row, index) => (
-                          <tr key={index}>
-                            <td style={{ textAlign: 'center' }}>{index + 1}</td>
-                            <td>
-                              <textarea
-                                className="form-control"
-                                value={row.prompt}
-                                onChange={(e) => updateRow(index, 'prompt', e.target.value)}
-                                placeholder="Введите запрос..."
-                                rows={2}
-                                style={{ width: '100%', resize: 'vertical' }}
-                              />
-                            </td>
-                            <td>
-                              <textarea
-                                className="form-control"
-                                value={row.reference}
-                                onChange={(e) => updateRow(index, 'reference', e.target.value)}
-                                placeholder="Введите эталонный ответ..."
-                                rows={2}
-                                style={{ width: '100%', resize: 'vertical' }}
-                              />
-                            </td>
-                            <td style={{ textAlign: 'center' }}>
-                              <button
-                                type="button"
-                                className="btn btn-danger btn-small"
-                                onClick={() => removeRow(index)}
-                                disabled={webDatasetData.rows.length === 1}
-                                title="Удалить строку"
-                              >
-                                <i className="fas fa-trash"></i>
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  
-                  <button type="button" className="btn btn-secondary" onClick={addRow}>
-                    <i className="fas fa-plus"></i> Добавить строку
-                  </button>
-                </div>
+          <Form.Item label="Данные">
+            <Form.List name="rows">
+              {(fields, { add, remove }) => (
+                <>
+                  {fields.map((field, index) => (
+                    <Card
+                      key={field.key}
+                      size="small"
+                      style={{ marginBottom: 12 }}
+                      title={`Строка ${index + 1}`}
+                      extra={
+                        fields.length > 1 && (
+                          <Button
+                            type="text"
+                            danger
+                            icon={<MinusCircleOutlined />}
+                            onClick={() => remove(field.name)}
+                          >
+                            Удалить
+                          </Button>
+                        )
+                      }
+                    >
+                      <Form.Item
+                        {...field}
+                        name={[field.name, 'prompt']}
+                        label="Prompt (запрос)"
+                        style={{ marginBottom: 12 }}
+                      >
+                        <TextArea rows={2} placeholder="Введите запрос..." />
+                      </Form.Item>
+                      <Form.Item
+                        {...field}
+                        name={[field.name, 'reference']}
+                        label="Reference (эталон)"
+                        style={{ marginBottom: 0 }}
+                      >
+                        <TextArea rows={2} placeholder="Введите эталонный ответ..." />
+                      </Form.Item>
+                    </Card>
+                  ))}
+                  <Button
+                    type="dashed"
+                    onClick={() => add()}
+                    icon={<PlusOutlined />}
+                    block
+                  >
+                    Добавить строку
+                  </Button>
+                </>
+              )}
+            </Form.List>
+          </Form.Item>
 
-                <div className="form-actions">
-                  <button type="submit" className="btn btn-primary">
-                    Создать датасет
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+              <Button onClick={() => {
+                setShowWebModal(false);
+                webForm.resetFields();
+              }}>
+                Отмена
+              </Button>
+              <Button type="primary" htmlType="submit">
+                Создать датасет
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

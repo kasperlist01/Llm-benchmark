@@ -1,85 +1,116 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Form, Input, Button, Checkbox, Card, Typography, Space, message } from 'antd';
+import { UserOutlined, LockOutlined, RobotOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
-import { showNotification } from '../utils/notifications';
+
+const { Title, Text } = Typography;
 
 const Login: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [form] = Form.useForm();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: any) => {
     setLoading(true);
 
     try {
-      await login({ username, password, remember_me: rememberMe });
+      await login({
+        username: values.username,
+        password: values.password,
+        remember_me: values.remember || false,
+      });
+      message.success('Вход выполнен успешно');
       navigate('/');
     } catch (error: any) {
-      showNotification({
-        message: error.response?.data?.error || 'Ошибка входа. Проверьте имя пользователя и пароль.',
-        type: 'error',
-        title: 'Ошибка входа',
-      });
+      message.error(error.response?.data?.error || 'Ошибка входа. Проверьте имя пользователя и пароль.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-form">
-        <h1>Вход</h1>
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="form-group">
-            <label htmlFor="username">Имя пользователя</label>
-            <input
-              type="text"
-              id="username"
-              className="form-control"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
+    <div style={{
+      minHeight: 'calc(100vh - 64px)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#f5f5f5',
+      padding: '24px',
+    }}>
+      <Card
+        style={{
+          width: '100%',
+          maxWidth: 450,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        }}
+      >
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <div style={{ textAlign: 'center' }}>
+            <RobotOutlined style={{ fontSize: 48, color: '#1890ff', marginBottom: 16 }} />
+            <Title level={2} style={{ marginBottom: 8 }}>Вход в систему</Title>
+            <Text type="secondary">Введите ваши учетные данные</Text>
           </div>
-          <div className="form-group">
-            <label htmlFor="password">Пароль</label>
-            <input
-              type="password"
-              id="password"
-              className="form-control"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+
+          <Form
+            form={form}
+            name="login"
+            onFinish={handleSubmit}
+            layout="vertical"
+            size="large"
+            autoComplete="off"
+          >
+            <Form.Item
+              name="username"
+              rules={[
+                { required: true, message: 'Введите имя пользователя' },
+                { min: 3, message: 'Минимум 3 символа' },
+              ]}
+            >
+              <Input
+                prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
+                placeholder="Имя пользователя"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="password"
+              rules={[
+                { required: true, message: 'Введите пароль' },
+                { min: 6, message: 'Минимум 6 символов' },
+              ]}
+            >
+              <Input.Password
+                prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
+                placeholder="Пароль"
+              />
+            </Form.Item>
+
+            <Form.Item name="remember" valuePropName="checked">
+              <Checkbox>Запомнить меня</Checkbox>
+            </Form.Item>
+
+            <Form.Item style={{ marginBottom: 0 }}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                block
+                style={{ height: 42 }}
+              >
+                Войти
+              </Button>
+            </Form.Item>
+          </Form>
+
+          <div style={{ textAlign: 'center', marginTop: 16 }}>
+            <Text type="secondary">
+              Нет аккаунта? <Link to="/register" style={{ color: '#1890ff' }}>Зарегистрируйтесь</Link>
+            </Text>
           </div>
-          <div className="form-check">
-            <input
-              type="checkbox"
-              id="remember_me"
-              className="form-check-input"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-            />
-            <label htmlFor="remember_me" className="form-check-label">
-              Запомнить меня
-            </label>
-          </div>
-          <div className="form-group">
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Вход...' : 'Войти'}
-            </button>
-          </div>
-        </form>
-        <div className="border-top pt-3">
-          <small>
-            Нужна учетная запись? <Link to="/register">Зарегистрируйтесь сейчас</Link>
-          </small>
-        </div>
-      </div>
+        </Space>
+      </Card>
     </div>
   );
 };

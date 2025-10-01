@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { Card, Button, Typography, Space, Badge, Empty, Spin, Modal, Form, Input, Select, message, Row, Col, Tag } from 'antd';
+import { PlusOutlined, DeleteOutlined, ExperimentOutlined, ApiOutlined, CheckCircleOutlined, WarningOutlined } from '@ant-design/icons';
 import { modelsAPI, settingsAPI } from '../services/api';
 import { UserModel, APIIntegration } from '../types';
-import { showNotification } from '../utils/notifications';
+
+const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
 
 const Models: React.FC = () => {
   const [models, setModels] = useState<UserModel[]>([]);
@@ -9,31 +13,12 @@ const Models: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [judgeModelId, setJudgeModelId] = useState<number | null>(null);
-
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    api_integration_id: '',
-    color: '#808080',
-  });
-
   const [testingModel, setTestingModel] = useState<number | null>(null);
+  const [form] = Form.useForm();
 
   useEffect(() => {
     loadData();
   }, []);
-
-  useEffect(() => {
-    if (showModal) {
-      document.body.classList.add('modal-open');
-    } else {
-      document.body.classList.remove('modal-open');
-    }
-    
-    return () => {
-      document.body.classList.remove('modal-open');
-    };
-  }, [showModal]);
 
   const loadData = async () => {
     try {
@@ -47,86 +32,64 @@ const Models: React.FC = () => {
       setJudgeModelId(settings.judge_model_id || null);
     } catch (error) {
       console.error('Error loading data:', error);
+      message.error('Ошибка загрузки данных');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async (values: any) => {
     const dataToSend = {
-      name: formData.name,
-      description: formData.description,
-      color: formData.color,
-      api_integration_id: formData.api_integration_id || '0',
+      name: values.name,
+      description: values.description || '',
+      color: values.color || '#808080',
+      api_integration_id: values.api_integration_id || '0',
     };
 
     try {
       await modelsAPI.addModel(dataToSend);
-      showNotification({
-        message: 'Модель успешно добавлена!',
-        type: 'success',
-        title: 'Успех',
-      });
+      message.success('Модель успешно добавлена!');
       setShowModal(false);
-      setFormData({ name: '', description: '', api_integration_id: '', color: '#808080' });
+      form.resetFields();
       loadData();
     } catch (error: any) {
-      showNotification({
-        message: error.response?.data?.error || 'Ошибка при добавлении модели',
-        type: 'error',
-        title: 'Ошибка',
-      });
+      message.error(error.response?.data?.error || 'Ошибка при добавлении модели');
     }
   };
 
   const handleDelete = async (modelId: number) => {
-    const model = models.find((m) => m.id === `custom_${modelId}`);
     const isJudge = judgeModelId === modelId;
+    const confirmMessage = isJudge
+      ? 'Эта модель используется как судья. При удалении она будет автоматически удалена из настроек судьи. Продолжить?'
+      : 'Вы уверены, что хотите удалить эту модель?';
 
-    let confirmMessage = 'Вы уверены, что хотите удалить эту модель?';
-    if (isJudge) {
-      confirmMessage =
-        'Эта модель используется как судья. При удалении она будет автоматически удалена из настроек судьи. Продолжить?';
-    }
-
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
-
-    try {
-      await modelsAPI.deleteModel(modelId);
-      showNotification({
-        message: 'Модель успешно удалена',
-        type: 'success',
-        title: 'Успех',
-      });
-      loadData();
-    } catch (error: any) {
-      showNotification({
-        message: error.response?.data?.error || 'Ошибка при удалении модели',
-        type: 'error',
-        title: 'Ошибка',
-      });
-    }
+    Modal.confirm({
+      title: 'Подтверждение удаления',
+      content: confirmMessage,
+      okText: 'Удалить',
+      okType: 'danger',
+      cancelText: 'Отмена',
+      onOk: async () => {
+        try {
+          await modelsAPI.deleteModel(modelId);
+          message.success('Модель успешно удалена');
+          loadData();
+        } catch (error: any) {
+          message.error(error.response?.data?.error || 'Ошибка при удалении модели');
+        }
+      },
+    });
   };
 
   const handleTestModel = async (modelId: number) => {
     setTestingModel(modelId);
     try {
       const result = await modelsAPI.testModel(modelId);
-      showNotification({
-        message: result.message || 'Соединение успешно',
-        type: result.success ? 'success' : 'error',
-        title: result.success ? 'Соединение успешно' : 'Ошибка соединения',
-      });
+      message[result.success ? 'success' : 'error'](
+        result.message || (result.success ? 'Соединение успешно' : 'Ошибка соединения')
+      );
     } catch (error: any) {
-      showNotification({
-        message: error.response?.data?.message || 'Ошибка при тестировании',
-        type: 'error',
-        title: 'Ошибка соединения',
-      });
+      message.error(error.response?.data?.message || 'Ошибка при тестировании');
     } finally {
       setTestingModel(null);
     }
@@ -134,206 +97,251 @@ const Models: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="loading">
-        <div className="loading-spinner"></div>
-        <div className="loading-text">Загрузка...</div>
+      <div style={{ textAlign: 'center', padding: '60px 0' }}>
+        <Spin size="large" />
+        <div style={{ marginTop: 16 }}>
+          <Text>Загрузка...</Text>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="user-models-container">
-      <div className="page-header">
-        <h1>Мои модели</h1>
-      </div>
+    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <Title level={2} style={{ marginBottom: 8 }}>Мои модели</Title>
+            <Text type="secondary">Управление вашими LLM-моделями</Text>
+          </div>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            size="large"
+            onClick={() => setShowModal(true)}
+          >
+            Добавить модель
+          </Button>
+        </div>
 
-      {models.length > 0 ? (
-        <>
-          <div className="models-list">
+        {models.length > 0 ? (
+          <Row gutter={[16, 16]}>
             {models.map((model) => {
               const modelIdNum = parseInt(model.id.replace('custom_', ''));
               const isJudge = judgeModelId === modelIdNum;
               return (
-                <div key={model.id} className="model-card">
-                  <div className="model-header">
-                    <div className="model-icon" style={{ backgroundColor: model.color || '#808080' }}>
-                      {model.name.substring(0, 2).toUpperCase()}
-                    </div>
-                    <div className="model-info">
-                      <h3>
-                        {model.name}
-                        {isJudge && (
-                          <span className="judge-indicator">
-                            <i className="fas fa-gavel"></i> СУДЬЯ
-                          </span>
-                        )}
-                      </h3>
-                      <p>{model.api_integration?.name || 'Нет интеграции'}</p>
-                    </div>
-                  </div>
-                  <div className="model-details">
-                    <p className="model-description">{model.description || 'Описание не предоставлено.'}</p>
-
-                    {model.api_integration ? (
-                      <>
-                        <div className="model-endpoint">
-                          <span className="label">API Integration:</span>
-                          <span className="value">{model.api_integration.name}</span>
+                <Col xs={24} sm={12} md={8} lg={6} key={model.id}>
+                  <Card
+                    hoverable
+                    style={{ height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+                  >
+                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                        <div
+                          style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: '8px',
+                            backgroundColor: model.color || '#808080',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#fff',
+                            fontSize: 18,
+                            fontWeight: 'bold',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {model.name.substring(0, 2).toUpperCase()}
                         </div>
-                        <div className="model-endpoint">
-                          <span className="label">API Endpoint:</span>
-                          <span className="value">{model.api_integration.api_url}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <Space size={8} wrap>
+                            <Text strong style={{ fontSize: 16 }}>{model.name}</Text>
+                            {isJudge && (
+                              <Tag color="gold" icon={<CheckCircleOutlined />}>СУДЬЯ</Tag>
+                            )}
+                          </Space>
+                          <div style={{ marginTop: 4 }}>
+                            <Text type="secondary" style={{ fontSize: 13 }}>
+                              {model.api_integration?.name || 'Нет интеграции'}
+                            </Text>
+                          </div>
                         </div>
-                      </>
-                    ) : (
-                      <div className="model-endpoint no-integration">
-                        <span className="label">Статус:</span>
-                        <span className="value">Нет API интеграции</span>
                       </div>
-                    )}
-                  </div>
-                  <div className="model-actions">
-                    {model.api_integration ? (
-                      <button
-                        className="btn btn-secondary test-model-btn"
-                        onClick={() => handleTestModel(modelIdNum)}
-                        disabled={testingModel === modelIdNum}
-                      >
-                        <i className="fas fa-vial"></i>
-                        {testingModel === modelIdNum ? ' Проверка...' : ' Проверить соединение'}
-                      </button>
-                    ) : (
-                      <button className="btn btn-secondary" disabled>
-                        <i className="fas fa-exclamation-triangle"></i> Нет API
-                      </button>
-                    )}
-                    <button className="btn btn-danger" onClick={() => handleDelete(modelIdNum)}>
-                      <i className="fas fa-trash-alt"></i> Удалить
-                    </button>
-                  </div>
-                </div>
+
+                      {model.description && (
+                        <Paragraph
+                          type="secondary"
+                          ellipsis={{ rows: 2 }}
+                          style={{ marginBottom: 0 }}
+                        >
+                          {model.description}
+                        </Paragraph>
+                      )}
+
+                      {model.api_integration ? (
+                        <div style={{ 
+                          padding: '12px', 
+                          backgroundColor: '#f5f5f5', 
+                          borderRadius: '6px' 
+                        }}>
+                          <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                            <Space>
+                              <ApiOutlined style={{ color: '#1890ff' }} />
+                              <Text strong style={{ fontSize: 12 }}>API Integration:</Text>
+                            </Space>
+                            <Text style={{ fontSize: 12, wordBreak: 'break-all' }}>
+                              {model.api_integration.api_url}
+                            </Text>
+                          </Space>
+                        </div>
+                      ) : (
+                        <div style={{ 
+                          padding: '12px', 
+                          backgroundColor: '#fff7e6', 
+                          borderRadius: '6px',
+                          border: '1px solid #ffd591'
+                        }}>
+                          <Space>
+                            <WarningOutlined style={{ color: '#fa8c16' }} />
+                            <Text type="warning" style={{ fontSize: 12 }}>
+                              Нет API интеграции
+                            </Text>
+                          </Space>
+                        </div>
+                      )}
+
+                      <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+                        {model.api_integration ? (
+                          <Button
+                            type="default"
+                            icon={<ExperimentOutlined />}
+                            onClick={() => handleTestModel(modelIdNum)}
+                            loading={testingModel === modelIdNum}
+                          >
+                            Проверить
+                          </Button>
+                        ) : (
+                          <Button type="default" disabled icon={<WarningOutlined />}>
+                            Нет API
+                          </Button>
+                        )}
+                        <Button
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => handleDelete(modelIdNum)}
+                        >
+                          Удалить
+                        </Button>
+                      </Space>
+                    </Space>
+                  </Card>
+                </Col>
               );
             })}
-          </div>
+          </Row>
+        ) : (
+          <Card style={{ textAlign: 'center', padding: '40px 0' }}>
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <Space direction="vertical" size="small">
+                  <Text strong>Нет пользовательских моделей</Text>
+                  <Text type="secondary">
+                    Добавьте свои собственные LLM-модели, чтобы включить их в тестирование
+                  </Text>
+                </Space>
+              }
+            >
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setShowModal(true)}
+              >
+                Добавить первую модель
+              </Button>
+            </Empty>
+          </Card>
+        )}
+      </Space>
 
-          <div className="models-footer" style={{ marginTop: '32px', textAlign: 'center' }}>
-            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-              <i className="fas fa-plus"></i> Добавить новую модель
-            </button>
-          </div>
-        </>
-      ) : (
-        <div className="empty-models">
-          <i className="fas fa-robot fa-4x"></i>
-          <h3>Пока нет пользовательских моделей</h3>
-          <p>Добавьте свои собственные LLM-модели, чтобы включить их в тестирование</p>
-          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-            <i className="fas fa-plus"></i> Добавить первую модель
-          </button>
-        </div>
-      )}
+      <Modal
+        title="Добавить пользовательскую модель"
+        open={showModal}
+        onCancel={() => {
+          setShowModal(false);
+          form.resetFields();
+        }}
+        footer={null}
+        width={600}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          initialValues={{ color: '#808080' }}
+        >
+          <Form.Item
+            name="name"
+            label="Название модели"
+            rules={[{ required: true, message: 'Введите название модели' }]}
+          >
+            <Input placeholder="GPT-4, Claude-3, Llama-2..." size="large" />
+          </Form.Item>
 
-      {showModal && (
-        <div className="modal" style={{ display: 'block' }} onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            setShowModal(false);
-            document.body.classList.remove('modal-open');
-          }
-        }}>
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>Добавить пользовательскую модель</h2>
-              <span className="close" onClick={() => {
+          <Form.Item name="description" label="Описание">
+            <TextArea
+              rows={3}
+              placeholder="Краткое описание этой модели"
+            />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={16}>
+              <Form.Item
+                name="api_integration_id"
+                label="API Интеграция"
+                extra={
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    Если нужной интеграции нет, <a href="/settings">добавьте её в настройках</a>
+                  </Text>
+                }
+              >
+                <Select
+                  placeholder="Выберите интеграцию"
+                  size="large"
+                  allowClear
+                >
+                  {integrations.map((integration) => (
+                    <Select.Option key={integration.id} value={integration.id}>
+                      {integration.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name="color" label="Цвет">
+                <Input type="color" size="large" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+              <Button onClick={() => {
                 setShowModal(false);
-                document.body.classList.remove('modal-open');
+                form.resetFields();
               }}>
-                &times;
-              </span>
-            </div>
-            <div className="modal-body">
-              <form onSubmit={handleSubmit}>
-                <div className="form-row">
-                  <div className="form-group form-group-large">
-                    <label>Название модели</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="GPT-4, Claude-3, Llama-2..."
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>Описание</label>
-                  <textarea
-                    className="form-control"
-                    placeholder="Краткое описание этой модели"
-                    rows={2}
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  />
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group form-group-large">
-                    <div className="form-label-help">
-                      <label>API Интеграция</label>
-                      <span className="tooltip-icon" data-tooltip="Выберите API интеграцию для этой модели">
-                        ?
-                      </span>
-                    </div>
-                    <select
-                      className="form-control styled-select"
-                      value={formData.api_integration_id}
-                      onChange={(e) => setFormData({ ...formData, api_integration_id: e.target.value })}
-                    >
-                      <option value="">Выберите интеграцию</option>
-                      {integrations.map((integration) => (
-                        <option key={integration.id} value={integration.id}>
-                          {integration.name}
-                        </option>
-                      ))}
-                    </select>
-                    <small className="form-text text-muted">
-                      Если нужной интеграции нет, <a href="/settings" target="_blank">добавьте её в настройках</a>
-                    </small>
-                  </div>
-                  <div className="form-group form-group-small">
-                    <div className="form-label-help">
-                      <label>Цвет</label>
-                      <span className="tooltip-icon" data-tooltip="Цвет для визуального отображения модели">
-                        ?
-                      </span>
-                    </div>
-                    <div className="color-picker-container">
-                      <input
-                        type="color"
-                        className="form-control color-picker"
-                        value={formData.color}
-                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                      />
-                      <div
-                        className="color-preview"
-                        id="colorPreview"
-                        style={{ backgroundColor: formData.color }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-actions">
-                  <button type="submit" className="btn btn-primary">
-                    Добавить модель
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+                Отмена
+              </Button>
+              <Button type="primary" htmlType="submit">
+                Добавить модель
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

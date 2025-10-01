@@ -1,83 +1,156 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Layout, Menu, Avatar, Dropdown, Button, Space } from 'antd';
+import {
+  DashboardOutlined,
+  DatabaseOutlined,
+  ExperimentOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+  UserOutlined,
+  LoginOutlined,
+  UserAddOutlined,
+  MenuOutlined,
+  RobotOutlined
+} from '@ant-design/icons';
+import type { MenuProps } from 'antd';
 import { useAuth } from '../contexts/AuthContext';
+
+const { Header } = Layout;
 
 const Navbar: React.FC = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const location = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const isActive = (path: string) => location.pathname === path;
+  const navigate = useNavigate();
+  const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
 
   const handleLogout = async () => {
     try {
       await logout();
+      navigate('/login');
     } catch (error) {
       console.error('Logout error:', error);
     }
   };
 
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
+  const userMenuItems: MenuProps['items'] = [
+    {
+      key: 'user',
+      label: user?.username || 'Пользователь',
+      icon: <UserOutlined />,
+      disabled: true,
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'logout',
+      label: 'Выход',
+      icon: <LogoutOutlined />,
+      onClick: handleLogout,
+    },
+  ];
+
+  const getMenuItems = (): MenuProps['items'] => {
+    if (isAuthenticated) {
+      return [
+        {
+          key: '/',
+          icon: <DashboardOutlined />,
+          label: <Link to="/">Панель управления</Link>,
+        },
+        {
+          key: '/models',
+          icon: <ExperimentOutlined />,
+          label: <Link to="/models">Мои модели</Link>,
+        },
+        {
+          key: '/datasets',
+          icon: <DatabaseOutlined />,
+          label: <Link to="/datasets">Мои датасеты</Link>,
+        },
+        {
+          key: '/settings',
+          icon: <SettingOutlined />,
+          label: <Link to="/settings">Настройки</Link>,
+        },
+      ];
+    }
+    return [
+      {
+        key: '/login',
+        icon: <LoginOutlined />,
+        label: <Link to="/login">Вход</Link>,
+      },
+      {
+        key: '/register',
+        icon: <UserAddOutlined />,
+        label: <Link to="/register">Регистрация</Link>,
+      },
+    ];
   };
 
   return (
-    <nav className="navbar">
-      <div className="navbar-content">
-        <Link to="/" className="navbar-brand">
-          <div className="logo-icon">
-            <i className="fas fa-robot"></i>
-          </div>
-          <span className="brand-text">Тестирование LLM</span>
+    <Header
+      style={{
+        position: 'fixed',
+        zIndex: 1000,
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid #f0f0f0',
+        padding: '0 24px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1 }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+          <RobotOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+          <span style={{ 
+            fontSize: '18px', 
+            fontWeight: 600, 
+            color: '#262626',
+            display: window.innerWidth < 768 ? 'none' : 'inline'
+          }}>
+            Тестирование LLM
+          </span>
         </Link>
 
-        <div className="menu-toggle" id="menuToggle" onClick={toggleMenu}>
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-      </div>
-
-      <div className={`nav-links ${menuOpen ? 'active' : ''}`} id="navLinks">
-        {isAuthenticated ? (
-          <>
-            <Link to="/" className={isActive('/') ? 'active' : ''}>
-              <i className="fas fa-chart-line"></i> Панель управления
-            </Link>
-            <Link to="/models" className={isActive('/models') ? 'active' : ''}>
-              <i className="fas fa-cubes"></i> Мои модели
-            </Link>
-            <Link to="/datasets" className={isActive('/datasets') ? 'active' : ''}>
-              <i className="fas fa-table"></i> Мои датасеты
-            </Link>
-            <Link to="/settings" className={isActive('/settings') ? 'active' : ''}>
-              <i className="fas fa-cog"></i> Настройки
-            </Link>
-          </>
-        ) : (
-          <>
-            <Link to="/login" className={isActive('/login') ? 'active' : ''}>
-              <i className="fas fa-sign-in-alt"></i> Вход
-            </Link>
-            <Link to="/register" className={isActive('/register') ? 'active' : ''}>
-              <i className="fas fa-user-plus"></i> Регистрация
-            </Link>
-          </>
-        )}
+        <Menu
+          mode="horizontal"
+          selectedKeys={[location.pathname]}
+          items={getMenuItems()}
+          style={{
+            flex: 1,
+            border: 'none',
+            backgroundColor: 'transparent',
+            display: window.innerWidth < 768 ? 'none' : 'flex',
+          }}
+        />
       </div>
 
       {isAuthenticated && user && (
-        <div className="user-section">
-          <div className="user-welcome">
-            <div className="user-avatar">{user.username[0]}</div>
-            <span>{user.username}</span>
-          </div>
-          <button onClick={handleLogout} className="logout-btn">
-            <i className="fas fa-sign-out-alt"></i> Выход
-          </button>
+        <div style={{ display: window.innerWidth < 768 ? 'none' : 'block' }}>
+          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+            <Space style={{ cursor: 'pointer', padding: '8px 16px', borderRadius: '6px' }}>
+              <Avatar style={{ backgroundColor: '#1890ff' }}>
+                {user.username[0].toUpperCase()}
+              </Avatar>
+              <span style={{ color: '#262626' }}>{user.username}</span>
+            </Space>
+          </Dropdown>
         </div>
       )}
-    </nav>
+
+      <Button
+        type="text"
+        icon={<MenuOutlined />}
+        style={{ display: window.innerWidth < 768 ? 'block' : 'none' }}
+        onClick={() => setMobileMenuVisible(!mobileMenuVisible)}
+      />
+    </Header>
   );
 };
 

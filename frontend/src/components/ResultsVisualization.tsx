@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
+import { Card, Button, Typography, Space, Progress, Tag, Radio, Alert, Divider } from 'antd';
+import { TrophyOutlined, DatabaseOutlined, CheckCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import { benchmarksAPI } from '../services/api';
-import { showNotification } from '../utils/notifications';
+import { message } from 'antd';
+
+const { Title, Text, Paragraph } = Typography;
 
 interface BlindTestResults {
   testType: string;
@@ -42,11 +46,7 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
   const [blindTestData, setBlindTestData] = useState(results?.blindTest || null);
 
   if (!results || !blindTestData) {
-    return (
-      <div className="empty-results">
-        <p>Выберите модели и тесты, затем запустите для просмотра результатов</p>
-      </div>
-    );
+    return null;
   }
 
   const handleVote = async (promptId: string, position: string) => {
@@ -57,18 +57,10 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
         position,
       });
       setBlindTestData(updatedData.blindTest || updatedData);
-      showNotification({
-        message: 'Голос записан!',
-        type: 'success',
-        title: 'Успех',
-      });
+      message.success('Голос записан!');
     } catch (error) {
       console.error('Error voting:', error);
-      showNotification({
-        message: 'Ошибка при записи голоса',
-        type: 'error',
-        title: 'Ошибка',
-      });
+      message.error('Ошибка при записи голоса');
     }
   };
 
@@ -78,13 +70,10 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
         testData: blindTestData,
       });
       setBlindTestData(updatedData.blindTest || updatedData);
+      message.success('Модели раскрыты!');
     } catch (error) {
       console.error('Error revealing:', error);
-      showNotification({
-        message: 'Ошибка при раскрытии моделей',
-        type: 'error',
-        title: 'Ошибка',
-      });
+      message.error('Ошибка при раскрытии моделей');
     }
   };
 
@@ -92,93 +81,140 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
   const allVoted = blindTestData.completedVotes === blindTestData.totalPairs;
 
   return (
-    <div className="blind-test-results">
-      <div className="blind-test-header">
-        <h2>Слепое тестирование</h2>
-        <p className="blind-test-description">
-          Сравните ответы от двух анонимных моделей и проголосуйте за ту, которую предпочитаете.
-          После голосования по всем парам вы сможете узнать, какая модель какая.
-        </p>
-        {blindTestData.datasetsUsed && (
-          <div className="datasets-used">
-            <h4>
-              <i className="fas fa-table"></i> Использованные датасеты:
-            </h4>
-            <div className="dataset-pills">
-              {blindTestData.datasetsUsed.map((dataset, idx) => (
-                <span key={idx} className="dataset-pill">
-                  {dataset}
-                </span>
-              ))}
-            </div>
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      <Card style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <div>
+            <Title level={3} style={{ marginBottom: 8 }}>Слепое тестирование</Title>
+            <Paragraph type="secondary">
+              Сравните ответы от двух анонимных моделей и проголосуйте за ту, которую предпочитаете.
+              После голосования по всем парам вы сможете узнать, какая модель какая.
+            </Paragraph>
           </div>
-        )}
-        <div className="blind-test-progress">
-          <span id="completedVotes">{blindTestData.completedVotes}</span> из{' '}
-          <span id="totalPairs">{blindTestData.totalPairs}</span> сравнений завершено
-        </div>
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${progressPercentage}%` }}></div>
-        </div>
-      </div>
 
-      <div className="blind-test-pairs" id="blindTestPairs">
+          {blindTestData.datasetsUsed && blindTestData.datasetsUsed.length > 0 && (
+            <div>
+              <Text strong>
+                <DatabaseOutlined /> Использованные датасеты:
+              </Text>
+              <div style={{ marginTop: 8 }}>
+                <Space size={[8, 8]} wrap>
+                  {blindTestData.datasetsUsed.map((dataset, idx) => (
+                    <Tag key={idx} color="orange">{dataset}</Tag>
+                  ))}
+                </Space>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <div style={{ marginBottom: 8 }}>
+              <Text>
+                <Text strong>{blindTestData.completedVotes}</Text> из{' '}
+                <Text strong>{blindTestData.totalPairs}</Text> сравнений завершено
+              </Text>
+            </div>
+            <Progress
+              percent={Number(progressPercentage.toFixed(1))}
+              status={allVoted ? 'success' : 'active'}
+              strokeColor={{
+                '0%': '#108ee9',
+                '100%': '#87d068',
+              }}
+            />
+          </div>
+        </Space>
+      </Card>
+
+      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
         {blindTestData.testPairs.map((pair, index) => (
-          <div key={pair.promptId} className={`blind-test-pair ${pair.voted ? 'voted' : ''}`}>
-            <div className="blind-test-prompt">
-              <span className="prompt-number">{index + 1}.</span>
-              <span className="prompt-text">{pair.prompt}</span>
-              {pair.source_info && (
-                <div className="prompt-meta">
-                  <span className="prompt-source">
-                    <i className="fas fa-table"></i> {pair.source_info.dataset}
-                  </span>
-                </div>
-              )}
-            </div>
+          <Card
+            key={pair.promptId}
+            style={{
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              border: pair.voted ? '2px solid #52c41a' : '1px solid #d9d9d9',
+            }}
+          >
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              <div>
+                <Space>
+                  <Tag color="blue">{index + 1}</Tag>
+                  {pair.voted && <Tag color="success" icon={<CheckCircleOutlined />}>Проголосовано</Tag>}
+                </Space>
+                <Paragraph strong style={{ marginTop: 8, marginBottom: 4, fontSize: 15 }}>
+                  {pair.prompt}
+                </Paragraph>
+                {pair.source_info && (
+                  <Text type="secondary" style={{ fontSize: 13 }}>
+                    <DatabaseOutlined /> {pair.source_info.dataset}
+                  </Text>
+                )}
+              </div>
 
-            <div className="blind-test-responses">
-              {pair.responses.map((response, respIdx) => (
-                <div
-                  key={respIdx}
-                  className={`response-container ${
-                    pair.voted && response.votes > 0 ? 'selected' : ''
-                  } ${pair.revealed ? 'revealed' : ''}`}
-                >
-                  <div className="response-header">
-                    <span className="response-position">
-                      Ответ {response.position}
-                      {pair.revealed && (
-                        <span className="model-name-label">
-                          {' '}
-                          {blindTestData.models[response.modelIndex]?.name}
-                        </span>
-                      )}
-                    </span>
-                    {pair.voted && response.votes > 0 && (
-                      <div className="vote-badge">Ваш выбор</div>
-                    )}
-                  </div>
-                  <div className="response-content markdown-content">{response.response}</div>
-                  {!pair.voted && (
-                    <button
-                      className="vote-button"
-                      onClick={() => handleVote(pair.promptId, response.position)}
+              <Divider style={{ margin: '8px 0' }} />
+
+              <Radio.Group
+                value={pair.responses.find(r => r.votes > 0)?.position}
+                disabled={pair.voted}
+                style={{ width: '100%' }}
+              >
+                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                  {pair.responses.map((response, respIdx) => (
+                    <Card
+                      key={respIdx}
+                      size="small"
+                      style={{
+                        backgroundColor: pair.voted && response.votes > 0 ? '#f6ffed' : '#fafafa',
+                        border: pair.voted && response.votes > 0 ? '1px solid #b7eb8f' : '1px solid #d9d9d9',
+                      }}
                     >
-                      Голосовать за {response.position}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+                      <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Text strong>
+                            Ответ {response.position}
+                            {pair.revealed && (
+                              <Text type="secondary" style={{ marginLeft: 8 }}>
+                                ({blindTestData.models[response.modelIndex]?.name})
+                              </Text>
+                            )}
+                          </Text>
+                          {pair.voted && response.votes > 0 && (
+                            <Tag color="success" icon={<CheckCircleOutlined />}>Ваш выбор</Tag>
+                          )}
+                        </div>
+                        <Paragraph style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                          {response.response}
+                        </Paragraph>
+                        {!pair.voted && (
+                          <Button
+                            type="primary"
+                            size="small"
+                            onClick={() => handleVote(pair.promptId, response.position)}
+                          >
+                            Голосовать за {response.position}
+                          </Button>
+                        )}
+                      </Space>
+                    </Card>
+                  ))}
+                </Space>
+              </Radio.Group>
+            </Space>
+          </Card>
         ))}
-      </div>
+      </Space>
 
       {allVoted && (
-        <div className="blind-test-results-summary" id="blindTestSummary">
-          <h3>Итоги</h3>
-          <div className="results-chart" id="blindTestChart">
+        <Card
+          title={
+            <Space>
+              <TrophyOutlined />
+              <span>Итоги</span>
+            </Space>
+          }
+          style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+        >
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
             {blindTestData.models.map((model, index) => {
               const percentage =
                 blindTestData.totalPairs > 0
@@ -186,37 +222,38 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
                   : 0;
 
               return (
-                <div key={model.id} className="result-bar-container">
-                  <div className="model-name">
-                    {model.revealed || blindTestData.testPairs[0]?.revealed
-                      ? model.name
-                      : `Модель ${index + 1}`}
+                <div key={model.id}>
+                  <div style={{ marginBottom: 8 }}>
+                    <Text strong>
+                      {model.revealed || blindTestData.testPairs[0]?.revealed
+                        ? model.name
+                        : `Модель ${index + 1}`}
+                    </Text>
                   </div>
-                  <div className="score-bar-wrapper">
-                    <div
-                      className="score-bar"
-                      style={{
-                        width: `${percentage}%`,
-                        backgroundColor: index === 0 ? '#4CAF50' : '#2196F3',
-                      }}
-                    >
-                      <span className="score-value">
-                        {model.totalVotes} голосов ({percentage.toFixed(1)}%)
-                      </span>
-                    </div>
-                  </div>
+                  <Progress
+                    percent={Number(percentage.toFixed(1))}
+                    format={() => `${model.totalVotes} голосов (${percentage.toFixed(1)}%)`}
+                    strokeColor={index === 0 ? '#52c41a' : '#1890ff'}
+                  />
                 </div>
               );
             })}
-          </div>
-          {!blindTestData.testPairs[0]?.revealed && (
-            <button id="revealModelsBtn" className="btn btn-primary" onClick={handleReveal}>
-              Раскрыть модели
-            </button>
-          )}
-        </div>
+
+            {!blindTestData.testPairs[0]?.revealed && (
+              <Button
+                type="primary"
+                icon={<EyeOutlined />}
+                size="large"
+                onClick={handleReveal}
+                block
+              >
+                Раскрыть модели
+              </Button>
+            )}
+          </Space>
+        </Card>
       )}
-    </div>
+    </Space>
   );
 };
 

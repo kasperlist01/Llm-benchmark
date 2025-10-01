@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Card, Slider, Space, Typography } from 'antd';
 import { MetricsConfig as MetricsConfigType } from '../types';
+
+const { Text } = Typography;
 
 interface MetricsConfigProps {
   metrics: MetricsConfigType;
@@ -13,29 +16,11 @@ interface MetricInfo {
 }
 
 const MetricsConfig: React.FC<MetricsConfigProps> = ({ metrics, onMetricsChange }) => {
-  const [collapsed, setCollapsed] = useState(false);
-
   const metricsInfo: MetricInfo[] = [
-    {
-      key: 'quantitative',
-      label: 'Количественные метрики',
-      color: '#3b82f6',
-    },
-    {
-      key: 'qualitative',
-      label: 'Качественные метрики',
-      color: '#8b5cf6',
-    },
-    {
-      key: 'hallucination',
-      label: 'Галлюцинации',
-      color: '#ef4444',
-    },
-    {
-      key: 'safety',
-      label: 'Безопасность',
-      color: '#10b981',
-    },
+    { key: 'quantitative', label: 'Количественные метрики', color: '#3b82f6' },
+    { key: 'qualitative', label: 'Качественные метрики', color: '#8b5cf6' },
+    { key: 'hallucination', label: 'Галлюцинации', color: '#ef4444' },
+    { key: 'safety', label: 'Безопасность', color: '#10b981' },
   ];
 
   const handleWeightChange = (metric: keyof MetricsConfigType, value: number) => {
@@ -45,52 +30,44 @@ const MetricsConfig: React.FC<MetricsConfigProps> = ({ metrics, onMetricsChange 
     });
   };
 
-  const getPercentage = (value: number) => {
-    return Math.round(value * 100);
-  };
-
   return (
-    <div className="component-container">
-      <h2 onClick={() => setCollapsed(!collapsed)}>
-        Конфигурация метрик
-        <span className={`toggle-icon ${collapsed ? 'collapsed' : ''}`}>▼</span>
-      </h2>
-      <div className={`component-content ${collapsed ? 'collapsed' : ''}`}>
-        <div className="metrics-config-minimal">
-          {metricsInfo.map((metricInfo) => {
-            const value = metrics[metricInfo.key].weight;
-            const percentage = getPercentage(value);
+    <Card
+      title="Конфигурация метрик"
+      style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+    >
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        {metricsInfo.map((metricInfo) => {
+          const value = metrics[metricInfo.key].weight;
+          const percentage = Math.round(value * 100);
 
-            return (
-              <div key={metricInfo.key} className="metric-item-minimal">
-                <div className="metric-row">
-                  <div className="metric-label">{metricInfo.label}</div>
-                  <div className="metric-value" style={{ color: metricInfo.color }}>
-                    {percentage}%
-                  </div>
-                </div>
-                
-                <div className="metric-slider-wrapper">
-                  <input
-                    type="range"
-                    className="metric-slider-minimal"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={value}
-                    onChange={(e) => handleWeightChange(metricInfo.key, parseFloat(e.target.value))}
-                    style={{
-                      '--slider-color': metricInfo.color,
-                      '--slider-percentage': `${percentage}%`,
-                    } as React.CSSProperties}
-                  />
-                </div>
+          return (
+            <div key={metricInfo.key}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: 8
+              }}>
+                <Text strong>{metricInfo.label}</Text>
+                <Text style={{ color: metricInfo.color, fontWeight: 600 }}>
+                  {percentage}%
+                </Text>
               </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+              <Slider
+                min={0}
+                max={1}
+                step={0.1}
+                value={value}
+                onChange={(val) => handleWeightChange(metricInfo.key, val)}
+                tooltip={{ formatter: (val) => `${Math.round((val || 0) * 100)}%` }}
+                trackStyle={{ backgroundColor: metricInfo.color }}
+                handleStyle={{ borderColor: metricInfo.color }}
+              />
+            </div>
+          );
+        })}
+      </Space>
+    </Card>
   );
 };
 

@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { Card, Checkbox, Space, Spin, Typography, Tag, Empty } from 'antd';
+import { CheckCircleOutlined } from '@ant-design/icons';
 import { Benchmark } from '../types';
 import { benchmarksAPI } from '../services/api';
+
+const { Text } = Typography;
 
 interface BenchmarkSelectorProps {
   selectedBenchmarks: string[];
@@ -13,7 +17,6 @@ const BenchmarkSelector: React.FC<BenchmarkSelectorProps> = ({
 }) => {
   const [benchmarks, setBenchmarks] = useState<Benchmark[]>([]);
   const [loading, setLoading] = useState(true);
-  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     loadBenchmarks();
@@ -40,54 +43,61 @@ const BenchmarkSelector: React.FC<BenchmarkSelectorProps> = ({
   };
 
   return (
-    <div className="component-container" id="benchmarkSelectorContainer">
-      <h2 onClick={() => setCollapsed(!collapsed)}>
-        Тесты
-        <span className={`toggle-icon ${collapsed ? 'collapsed' : ''}`} id="benchmarkSelectorToggle">
-          ▼
-        </span>
-      </h2>
-      <div className={`component-content ${collapsed ? 'collapsed' : ''}`} id="benchmarkSelectorContent">
-        {loading ? (
-          <div className="loading">Загрузка тестов...</div>
-        ) : (
-          <div className="benchmarks-list" id="benchmarksList">
-            {benchmarks.length === 0 ? (
-              <div className="empty-benchmarks">
-                <p>Нет доступных тестов</p>
-              </div>
-            ) : (
-              <div className="benchmarks-scroll-container">
-                {benchmarks.map((benchmark) => {
-                  const isSelected = selectedBenchmarks.includes(benchmark.id);
-                  return (
-                    <div
-                      key={benchmark.id}
-                      className={`benchmark-item ${isSelected ? 'selected' : ''}`}
-                      onClick={() => toggleBenchmark(benchmark.id)}
-                    >
-                      <div className="benchmark-details">
-                        <h3>{benchmark.name}</h3>
-                        <p>{benchmark.description}</p>
-                        {benchmark.metrics && benchmark.metrics.length > 0 && (
-                          <div className="benchmark-metrics">
-                            {benchmark.metrics.map((metric, index) => (
-                              <span key={index} className="metric-tag">
-                                {metric}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+    <Card
+      title="Тесты"
+      style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+    >
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+          <Spin />
+        </div>
+      ) : benchmarks.length === 0 ? (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description="Нет доступных тестов"
+        />
+      ) : (
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          {benchmarks.map((benchmark) => {
+            const isSelected = selectedBenchmarks.includes(benchmark.id);
+            return (
+              <Card
+                key={benchmark.id}
+                size="small"
+                hoverable
+                onClick={() => toggleBenchmark(benchmark.id)}
+                style={{
+                  cursor: 'pointer',
+                  border: isSelected ? '2px solid #52c41a' : '1px solid #d9d9d9',
+                  backgroundColor: isSelected ? '#f6ffed' : '#fff',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <Checkbox checked={isSelected} />
+                  <div style={{ flex: 1 }}>
+                    <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                      <Text strong>{benchmark.name}</Text>
+                      <Text type="secondary" style={{ fontSize: 13 }}>
+                        {benchmark.description}
+                      </Text>
+                      {benchmark.metrics && benchmark.metrics.length > 0 && (
+                        <Space size={[4, 4]} wrap>
+                          {benchmark.metrics.map((metric, index) => (
+                            <Tag key={index} color="green" icon={<CheckCircleOutlined />}>
+                              {metric}
+                            </Tag>
+                          ))}
+                        </Space>
+                      )}
+                    </Space>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </Space>
+      )}
+    </Card>
   );
 };
 

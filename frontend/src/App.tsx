@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ConfigProvider, Spin } from 'antd';
+import ruRU from 'antd/locale/ru_RU';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DashboardProvider } from './contexts/DashboardContext';
 import Layout from './components/Layout';
@@ -9,17 +11,20 @@ import Register from './pages/Register';
 import Models from './pages/Models';
 import Datasets from './pages/Datasets';
 import Settings from './pages/Settings';
-import './css/main.css';
-import './css/results.css';
 
 const PrivateRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="loading">
-        <div className="loading-spinner"></div>
-        <div className="loading-text">Загрузка...</div>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        backgroundColor: '#f5f5f5'
+      }}>
+        <Spin size="large" tip="Загрузка..." />
       </div>
     );
   }
@@ -32,9 +37,14 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
 
   if (loading) {
     return (
-      <div className="loading">
-        <div className="loading-spinner"></div>
-        <div className="loading-text">Загрузка...</div>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        backgroundColor: '#f5f5f5'
+      }}>
+        <Spin size="large" tip="Загрузка..." />
       </div>
     );
   }
@@ -103,11 +113,24 @@ const AppRoutes: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <DashboardProvider>
-        <AppRoutes />
-      </DashboardProvider>
-    </AuthProvider>
+    <ConfigProvider
+      locale={ruRU}
+      theme={{
+        token: {
+          colorPrimary: '#1890ff',
+          colorBgContainer: '#ffffff',
+          colorBgLayout: '#f5f5f5',
+          borderRadius: 6,
+          fontSize: 14,
+        },
+      }}
+    >
+      <AuthProvider>
+        <DashboardProvider>
+          <AppRoutes />
+        </DashboardProvider>
+      </AuthProvider>
+    </ConfigProvider>
   );
 };
 
