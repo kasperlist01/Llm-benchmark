@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Button, Typography, Space, Empty, Spin, Modal, Form, Input, Upload, Table, message, Row, Col } from 'antd';
-import { PlusOutlined, DeleteOutlined, UploadOutlined, EditOutlined, DatabaseOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, UploadOutlined, EditOutlined, DatabaseOutlined, MinusCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
 import { datasetsAPI } from '../services/api';
 import { UserDataset } from '../types';
@@ -14,6 +14,7 @@ const Datasets: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [showWebModal, setShowWebModal] = useState(false);
   const [showEditDataModal, setShowEditDataModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [editingDataset, setEditingDataset] = useState<UserDataset | null>(null);
   const [datasetData, setDatasetData] = useState<Array<{prompt: string; reference: string}>>([]);
@@ -196,7 +197,21 @@ const Datasets: React.FC = () => {
                 <Col xs={24} sm={12} md={8} key={dataset.id}>
                   <Card
                     hoverable
-                    style={{ height: '100%', minHeight: '320px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+                    style={{ height: '100%', minHeight: '320px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', cursor: 'pointer' }}
+                    onClick={async () => {
+                      setEditingDataset(dataset);
+                      setLoadingData(true);
+                      setShowViewModal(true);
+                      try {
+                        const result = await datasetsAPI.getDatasetData(datasetIdNum);
+                        setDatasetData(result.data);
+                      } catch (error: any) {
+                        message.error(error.response?.data?.error || 'Ошибка загрузки данных');
+                        setShowViewModal(false);
+                      } finally {
+                        setLoadingData(false);
+                      }
+                    }}
                   >
                     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -212,9 +227,24 @@ const Datasets: React.FC = () => {
                             color: '#fff',
                             fontSize: 20,
                             flexShrink: 0,
+                            position: 'relative',
                           }}
                         >
                           <DatabaseOutlined />
+                          <div style={{
+                            position: 'absolute',
+                            bottom: -2,
+                            right: -2,
+                            width: 20,
+                            height: 20,
+                            borderRadius: '50%',
+                            backgroundColor: '#1890ff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}>
+                            <EyeOutlined style={{ fontSize: 10, color: '#fff' }} />
+                          </div>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <Text strong style={{ fontSize: 16 }}>{dataset.name}</Text>
@@ -247,50 +277,37 @@ const Datasets: React.FC = () => {
                         </Space>
                       </div>
 
-                      <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                        <Space style={{ width: '100%' }}>
-                          <Button
-                            icon={<EditOutlined />}
-                            onClick={() => {
-                              form.setFieldsValue({
-                                name: dataset.name,
-                                description: dataset.description || '',
-                              });
-                              setEditingDataset(dataset);
-                              setShowModal(true);
-                            }}
-                            style={{ flex: 1 }}
-                          >
-                            Изменить
-                          </Button>
-                          <Button
-                            type="default"
-                            icon={<DatabaseOutlined />}
-                            onClick={async () => {
-                              setEditingDataset(dataset);
-                              setLoadingData(true);
-                              setShowEditDataModal(true);
-                              try {
-                                const result = await datasetsAPI.getDatasetData(datasetIdNum);
-                                setDatasetData(result.data);
-                                editDataForm.setFieldsValue({ rows: result.data });
-                              } catch (error: any) {
-                                message.error(error.response?.data?.error || 'Ошибка загрузки данных');
-                                setShowEditDataModal(false);
-                              } finally {
-                                setLoadingData(false);
-                              }
-                            }}
-                            style={{ flex: 1 }}
-                          >
-                            Данные
-                          </Button>
-                        </Space>
+                      <Space style={{ width: '100%' }}>
+                        <Button
+                          icon={<EditOutlined />}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            setEditingDataset(dataset);
+                            setLoadingData(true);
+                            setShowEditDataModal(true);
+                            try {
+                              const result = await datasetsAPI.getDatasetData(datasetIdNum);
+                              setDatasetData(result.data);
+                              editDataForm.setFieldsValue({ rows: result.data });
+                            } catch (error: any) {
+                              message.error(error.response?.data?.error || 'Ошибка загрузки данных');
+                              setShowEditDataModal(false);
+                            } finally {
+                              setLoadingData(false);
+                            }
+                          }}
+                          style={{ flex: 1 }}
+                        >
+                          Редактировать
+                        </Button>
                         <Button
                           danger
                           icon={<DeleteOutlined />}
-                          onClick={() => handleDelete(datasetIdNum)}
-                          block
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(datasetIdNum);
+                          }}
+                          style={{ flex: 1 }}
                         >
                           Удалить
                         </Button>
@@ -587,6 +604,64 @@ const Datasets: React.FC = () => {
               </Space>
             </Form.Item>
           </Form>
+        )}
+      </Modal>
+
+      <Modal
+        title={`Просмотр: ${editingDataset?.name || ''}`}
+        open={showViewModal}
+        onCancel={() => {
+          setShowViewModal(false);
+          setEditingDataset(null);
+        }}
+        footer={null}
+        width={900}
+      >
+        {loadingData ? (
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <Spin size="large" />
+            <div style={{ marginTop: 16 }}>
+              <Text>Загрузка данных...</Text>
+            </div>
+          </div>
+        ) : (
+          <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              <Text strong>Всего строк: {datasetData.length}</Text>
+              {datasetData.map((row, index) => (
+                <Card key={index} size="small" title={`Строка ${index + 1}`}>
+                  <Space direction="vertical" style={{ width: '100%' }}>
+                    <div>
+                      <Text strong style={{ color: '#1890ff' }}>Prompt:</Text>
+                      <div style={{ 
+                        marginTop: 8, 
+                        padding: 12, 
+                        backgroundColor: '#f5f5f5', 
+                        borderRadius: 4,
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word'
+                      }}>
+                        {row.prompt || <Text type="secondary">Пусто</Text>}
+                      </div>
+                    </div>
+                    <div>
+                      <Text strong style={{ color: '#52c41a' }}>Reference:</Text>
+                      <div style={{ 
+                        marginTop: 8, 
+                        padding: 12, 
+                        backgroundColor: '#f5f5f5', 
+                        borderRadius: 4,
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word'
+                      }}>
+                        {row.reference || <Text type="secondary">Пусто</Text>}
+                      </div>
+                    </div>
+                  </Space>
+                </Card>
+              ))}
+            </Space>
+          </div>
         )}
       </Modal>
     </div>

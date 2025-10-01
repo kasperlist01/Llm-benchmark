@@ -93,11 +93,13 @@ const Models: React.FC = () => {
     setTestingModel(modelId);
     try {
       const result = await modelsAPI.testModel(modelId);
-      message[result.success ? 'success' : 'error'](
-        result.message || (result.success ? 'Соединение успешно' : 'Ошибка соединения')
-      );
+      if (result.success) {
+        message.success(result.message || 'Тест успешно пройден! Модель работает корректно.', 5);
+      } else {
+        message.error(result.message || 'Тест не пройден. Проверьте настройки API.', 5);
+      }
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Ошибка при тестировании');
+      message.error(error.response?.data?.message || 'Ошибка при тестировании модели', 5);
     } finally {
       setTestingModel(null);
     }
@@ -219,41 +221,39 @@ const Models: React.FC = () => {
                         </div>
                       )}
 
-                      <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                        <Space style={{ width: '100%' }}>
-                          {model.api_integration ? (
-                            <Button
-                              type="default"
-                              icon={<ExperimentOutlined />}
-                              onClick={() => handleTestModel(modelIdNum)}
-                              loading={testingModel === modelIdNum}
-                              style={{ flex: 1 }}
-                            >
-                              Тест
-                            </Button>
-                          ) : null}
+                      <Space style={{ width: '100%' }}>
+                        {model.api_integration && (
                           <Button
-                            icon={<EditOutlined />}
-                            onClick={() => {
-                              form.setFieldsValue({
-                                name: model.name,
-                                description: model.description,
-                                color: model.color,
-                                api_integration_id: model.api_integration?.id,
-                              });
-                              setEditingModel(model);
-                              setShowModal(true);
-                            }}
+                            type="default"
+                            icon={<ExperimentOutlined />}
+                            onClick={() => handleTestModel(modelIdNum)}
+                            loading={testingModel === modelIdNum}
                             style={{ flex: 1 }}
                           >
-                            Изменить
+                            Тест
                           </Button>
-                        </Space>
+                        )}
+                        <Button
+                          icon={<EditOutlined />}
+                          onClick={() => {
+                            form.setFieldsValue({
+                              name: model.name,
+                              description: model.description,
+                              color: model.color,
+                              api_integration_id: model.api_integration?.id,
+                            });
+                            setEditingModel(model);
+                            setShowModal(true);
+                          }}
+                          style={{ flex: 1 }}
+                        >
+                          Изменить
+                        </Button>
                         <Button
                           danger
                           icon={<DeleteOutlined />}
                           onClick={() => handleDelete(modelIdNum)}
-                          block
+                          style={{ flex: 1 }}
                         >
                           Удалить
                         </Button>
