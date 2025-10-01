@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Button, Typography, Space, Spin, Modal, Form, Input, Select, Avatar, List, Divider, message, Row, Col } from 'antd';
-import { UserOutlined, LockOutlined, KeyOutlined, ApiOutlined, DeleteOutlined, PlusOutlined, SaveOutlined, SafetyOutlined, EditOutlined } from '@ant-design/icons';
-import { settingsAPI, modelsAPI } from '../services/api';
-import { APIIntegration, UserModel } from '../types';
+import { Card, Button, Typography, Space, Spin, Modal, Form, Input, Avatar, List, Divider, message, Row, Col } from 'antd';
+import { UserOutlined, LockOutlined, KeyOutlined, ApiOutlined, DeleteOutlined, PlusOutlined, SafetyOutlined, EditOutlined } from '@ant-design/icons';
+import { settingsAPI } from '../services/api';
+import { APIIntegration } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
 const { Title, Text, Paragraph } = Typography;
@@ -11,15 +11,12 @@ const { TextArea } = Input;
 const Settings: React.FC = () => {
   const { user } = useAuth();
   const [integrations, setIntegrations] = useState<APIIntegration[]>([]);
-  const [models, setModels] = useState<UserModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [showApiModal, setShowApiModal] = useState(false);
   const [editingIntegration, setEditingIntegration] = useState<APIIntegration | null>(null);
-  const [judgeModelId, setJudgeModelId] = useState<string>('0');
   
   const [passwordForm] = Form.useForm();
   const [apiForm] = Form.useForm();
-  const [judgeForm] = Form.useForm();
 
   useEffect(() => {
     loadData();
@@ -27,16 +24,8 @@ const Settings: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [integrationsData, modelsData, settingsData] = await Promise.all([
-        settingsAPI.getIntegrations(),
-        modelsAPI.getUserModels(),
-        settingsAPI.getSettings(),
-      ]);
+      const integrationsData = await settingsAPI.getIntegrations();
       setIntegrations(Array.isArray(integrationsData) ? integrationsData : []);
-      setModels(Array.isArray(modelsData) ? modelsData : []);
-      const judgeId = settingsData.judge_model_id ? String(settingsData.judge_model_id) : '0';
-      setJudgeModelId(judgeId);
-      judgeForm.setFieldsValue({ judge_model_id: judgeId });
     } catch (error) {
       console.error('Error loading data:', error);
       message.error('Ошибка загрузки данных');
@@ -94,17 +83,6 @@ const Settings: React.FC = () => {
         }
       },
     });
-  };
-
-  const handleSaveJudgeModel = async (values: any) => {
-    try {
-      await settingsAPI.updateSettings({
-        judge_model_id: values.judge_model_id === '0' ? null : parseInt(values.judge_model_id),
-      });
-      message.success('Настройки модели-судьи сохранены!');
-    } catch (error: any) {
-      message.error(error.response?.data?.error || 'Ошибка при сохранении настроек');
-    }
   };
 
   if (loading) {
@@ -335,66 +313,6 @@ const Settings: React.FC = () => {
             </Card>
           </Col>
 
-          {/* Модель-судья */}
-          <Col xs={24}>
-            <Card
-              title={
-                <Space>
-                  <ApiOutlined />
-                  <span>Настройки модели-судьи</span>
-                </Space>
-              }
-              style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
-            >
-              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                  Выберите модель, которая будет использоваться для автоматической оценки других моделей
-                </Paragraph>
-
-                <Form
-                  form={judgeForm}
-                  layout="vertical"
-                  onFinish={handleSaveJudgeModel}
-                  initialValues={{ judge_model_id: judgeModelId }}
-                >
-                  <Row gutter={16}>
-                    <Col xs={24} md={16}>
-                      <Form.Item
-                        name="judge_model_id"
-                        label="Модель-судья"
-                        extra="Только модели с настроенными API интеграциями могут выступать в роли судьи"
-                      >
-                        <Select size="large">
-                          <Select.Option value="0">Не выбрано</Select.Option>
-                          {models.map((model) => {
-                            const modelIdNum = parseInt(model.id.replace('custom_', ''));
-                            return (
-                              <Select.Option key={model.id} value={String(modelIdNum)}>
-                                {model.name}
-                              </Select.Option>
-                            );
-                          })}
-                        </Select>
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} md={8}>
-                      <Form.Item label=" " style={{ marginBottom: 0 }}>
-                        <Button
-                          type="primary"
-                          htmlType="submit"
-                          icon={<SaveOutlined />}
-                          size="large"
-                          block
-                        >
-                          Сохранить
-                        </Button>
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </Form>
-              </Space>
-            </Card>
-          </Col>
         </Row>
       </Space>
 
@@ -426,11 +344,20 @@ const Settings: React.FC = () => {
               { type: 'url', message: 'Введите корректный URL' },
             ]}
           >
-            <Input placeholder="https://api.openai.com/v1" size="large" />
+            <Input 
+              placeholder="https://api.openai.com/v1" 
+              size="large"
+              autoComplete="off"
+            />
           </Form.Item>
 
           <Form.Item name="api_key" label="API Key">
-            <Input.Password placeholder="sk-..." size="large" />
+            <Input.Password 
+              placeholder="sk-..." 
+              size="large"
+              autoComplete="new-password"
+              visibilityToggle
+            />
           </Form.Item>
 
           <Form.Item name="description" label="Описание">

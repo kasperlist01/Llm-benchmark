@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider, Spin } from 'antd';
+import { ConfigProvider, Spin, message, App as AntApp } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DashboardProvider } from './contexts/DashboardContext';
@@ -112,6 +112,17 @@ const AppRoutes: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  useEffect(() => {
+    // Configure message globally
+    message.config({
+      top: 80,
+      duration: 5,
+      maxCount: 3,
+      prefixCls: 'ant-message',
+      getContainer: () => document.body,
+    });
+  }, []);
+
   return (
     <ConfigProvider
       locale={ruRU}
@@ -125,11 +136,13 @@ const App: React.FC = () => {
         },
       }}
     >
-      <AuthProvider>
-        <DashboardProvider>
-          <AppRoutes />
-        </DashboardProvider>
-      </AuthProvider>
+      <AntApp>
+        <AuthProvider>
+          <DashboardProvider>
+            <AppRoutes />
+          </DashboardProvider>
+        </AuthProvider>
+      </AntApp>
     </ConfigProvider>
   );
 };

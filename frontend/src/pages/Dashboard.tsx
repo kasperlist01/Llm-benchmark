@@ -17,14 +17,16 @@ const Dashboard: React.FC = () => {
   const {
     selectedModels,
     setSelectedModels,
-    selectedBenchmarks,
-    setSelectedBenchmarks,
+    selectedBenchmark,
+    setSelectedBenchmark,
     selectedDatasets,
     setSelectedDatasets,
     metrics,
     setMetrics,
     results,
     setResults,
+    resultsVisible,
+    setResultsVisible,
   } = useDashboard();
   
   const [loading, setLoading] = useState(false);
@@ -77,7 +79,7 @@ const Dashboard: React.FC = () => {
   }, [isResizing]);
 
   const handleRunBenchmark = async () => {
-    if (selectedModels.length === 0 || selectedBenchmarks.length === 0) {
+    if (selectedModels.length === 0 || !selectedBenchmark) {
       message.error('Пожалуйста, выберите хотя бы одну модель и один тест');
       return;
     }
@@ -89,17 +91,19 @@ const Dashboard: React.FC = () => {
 
     setLoading(true);
     setResults(null);
+    setResultsVisible(false);
 
     const request: BenchmarkRequest = {
-      selectedModels,
-      selectedBenchmarks,
-      selectedDatasets,
+      selectedModels: selectedModels.map(m => m.id),
+      selectedBenchmarks: [selectedBenchmark.id],
+      selectedDatasets: selectedDatasets.map(d => d.id),
       metrics,
     };
 
     try {
       const result = await benchmarksAPI.runBenchmark(request);
       setResults(result);
+      setResultsVisible(true);
       message.success('Тестирование успешно завершено');
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Ошибка при выполнении тестирования';
@@ -136,8 +140,8 @@ const Dashboard: React.FC = () => {
             onSelectionChange={setSelectedModels}
           />
           <BenchmarkSelector
-            selectedBenchmarks={selectedBenchmarks}
-            onSelectionChange={setSelectedBenchmarks}
+            selectedBenchmark={selectedBenchmark}
+            onSelectionChange={setSelectedBenchmark}
           />
           <DatasetSelector
             selectedDatasets={selectedDatasets}
@@ -200,12 +204,14 @@ const Dashboard: React.FC = () => {
           height: '100%', 
           overflowY: 'auto', 
           paddingLeft: 8,
-          paddingBottom: 24 
+          paddingBottom: 24,
+          position: 'relative',
+          zIndex: 1
         }}
       >
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <Card style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-              <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <Space direction="vertical" size="large" style={{ width: '100%', position: 'relative' }}>
+            <Card style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)', position: 'relative', zIndex: 0 }}>
+              <Space direction="vertical" size="large" style={{ width: '100%', position: 'relative' }}>
                 <div>
                   <Title level={3} style={{ marginBottom: 8 }}>Панель тестирования</Title>
                 </div>
@@ -233,8 +239,8 @@ const Dashboard: React.FC = () => {
                           <Text type="secondary">Модели не выбраны</Text>
                         ) : (
                           <Space wrap size={[8, 8]}>
-                            {selectedModels.map((id) => (
-                              <Tag key={id} color="blue">{id}</Tag>
+                            {selectedModels.map((model) => (
+                              <Tag key={model.id} color="blue">{model.name}</Tag>
                             ))}
                           </Space>
                         )}
@@ -246,9 +252,9 @@ const Dashboard: React.FC = () => {
                     <div>
                       <Space style={{ marginBottom: 8 }}>
                         <CheckCircleOutlined style={{ fontSize: 18, color: '#52c41a' }} />
-                        <Text strong>Выбранные тесты</Text>
+                        <Text strong>Выбранный тест</Text>
                         <Badge 
-                          count={selectedBenchmarks.length} 
+                          count={selectedBenchmark ? 1 : 0} 
                           showZero 
                           style={{ backgroundColor: '#52c41a' }} 
                         />
@@ -259,14 +265,10 @@ const Dashboard: React.FC = () => {
                         borderRadius: '6px',
                         minHeight: '60px'
                       }}>
-                        {selectedBenchmarks.length === 0 ? (
-                          <Text type="secondary">Тесты не выбраны</Text>
+                        {!selectedBenchmark ? (
+                          <Text type="secondary">Тест не выбран</Text>
                         ) : (
-                          <Space wrap size={[8, 8]}>
-                            {selectedBenchmarks.map((id) => (
-                              <Tag key={id} color="green">{id}</Tag>
-                            ))}
-                          </Space>
+                          <Tag color="green">{selectedBenchmark.name}</Tag>
                         )}
                       </div>
                     </div>
@@ -293,8 +295,8 @@ const Dashboard: React.FC = () => {
                           <Text type="secondary">Датасеты не выбраны</Text>
                         ) : (
                           <Space wrap size={[8, 8]}>
-                            {selectedDatasets.map((id) => (
-                              <Tag key={id} color="orange">{id}</Tag>
+                            {selectedDatasets.map((dataset) => (
+                              <Tag key={dataset.id} color="orange">{dataset.name}</Tag>
                             ))}
                           </Space>
                         )}
@@ -320,7 +322,7 @@ const Dashboard: React.FC = () => {
             </Card>
 
             {/* Контейнер результатов */}
-            <Card style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+            <Card style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)', position: 'relative', zIndex: 0 }}>
               {loading ? (
                 <div style={{ textAlign: 'center', padding: '60px 0' }}>
                   <Spin size="large" />
@@ -330,8 +332,25 @@ const Dashboard: React.FC = () => {
                     <Text type="secondary">Обработка моделей и вычисление метрик</Text>
                   </div>
                 </div>
-              ) : results ? (
+              ) : results && resultsVisible ? (
                 <ResultsVisualization results={results} />
+              ) : results && !resultsVisible ? (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={
+                    <Space direction="vertical" size="small">
+                      <Text strong>Тестирование завершено</Text>
+                      <Text type="secondary">
+                        Результаты готовы к просмотру
+                      </Text>
+                    </Space>
+                  }
+                  style={{ padding: '40px 0' }}
+                >
+                  <Button type="primary" onClick={() => setResultsVisible(true)}>
+                    Показать результаты
+                  </Button>
+                </Empty>
               ) : (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -339,7 +358,7 @@ const Dashboard: React.FC = () => {
                     <Space direction="vertical" size="small">
                       <Text strong>Готовы к тестированию</Text>
                       <Text type="secondary">
-                        Выберите модели, тесты и датасеты, затем запустите тестирование
+                        Выберите модели, тест и датасеты, затем запустите тестирование
                       </Text>
                     </Space>
                   }

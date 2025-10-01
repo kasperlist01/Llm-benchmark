@@ -11,9 +11,9 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <AntLayout style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+    <AntLayout style={{ minHeight: '100vh', backgroundColor: '#f5f5f5', margin: 0, padding: 0 }}>
       <Navbar />
-      <Content style={{ padding: '24px', marginTop: '64px' }}>
+      <Content style={{ padding: '24px', marginTop: '64px', paddingTop: '24px' }}>
         {children}
       </Content>
       <BackTop>

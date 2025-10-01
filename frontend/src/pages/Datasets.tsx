@@ -225,34 +225,32 @@ const Datasets: React.FC = () => {
                             alignItems: 'center',
                             justifyContent: 'center',
                             color: '#fff',
-                            fontSize: 20,
+                            fontSize: 18,
+                            fontWeight: 'bold',
                             flexShrink: 0,
-                            position: 'relative',
                           }}
                         >
                           <DatabaseOutlined />
-                          <div style={{
-                            position: 'absolute',
-                            bottom: -2,
-                            right: -2,
-                            width: 20,
-                            height: 20,
-                            borderRadius: '50%',
-                            backgroundColor: '#1890ff',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}>
-                            <EyeOutlined style={{ fontSize: 10, color: '#fff' }} />
-                          </div>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <Text strong style={{ fontSize: 16 }}>{dataset.name}</Text>
-                          <div style={{ marginTop: 4 }}>
-                            <Text type="secondary" style={{ fontSize: 13 }}>
-                              {dataset.description || 'Описание отсутствует'}
-                            </Text>
-                          </div>
+                          {dataset.description && (
+                            <div style={{ marginTop: 4 }}>
+                              <Text 
+                                type="secondary" 
+                                style={{ 
+                                  fontSize: 13,
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                }}
+                              >
+                                {dataset.description}
+                              </Text>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -263,7 +261,7 @@ const Datasets: React.FC = () => {
                       }}>
                         <Space direction="vertical" size={4} style={{ width: '100%' }}>
                           <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                            <Text type="secondary" style={{ fontSize: 12 }}>Строк:</Text>
+                            <Text type="secondary" style={{ fontSize: 12 }}>Вопросов:</Text>
                             <Text strong>{dataset.row_count || 'N/A'}</Text>
                           </Space>
                           {dataset.file_path && (
@@ -298,7 +296,7 @@ const Datasets: React.FC = () => {
                           }}
                           style={{ flex: 1 }}
                         >
-                          Редактировать
+                          Изменить
                         </Button>
                         <Button
                           danger

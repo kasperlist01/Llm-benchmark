@@ -7,8 +7,8 @@ import { datasetsAPI } from '../services/api';
 const { Text, Link } = Typography;
 
 interface DatasetSelectorProps {
-  selectedDatasets: string[];
-  onSelectionChange: (datasets: string[]) => void;
+  selectedDatasets: UserDataset[];
+  onSelectionChange: (datasets: UserDataset[]) => void;
 }
 
 const DatasetSelector: React.FC<DatasetSelectorProps> = ({
@@ -34,11 +34,12 @@ const DatasetSelector: React.FC<DatasetSelectorProps> = ({
     }
   };
 
-  const toggleDataset = (datasetId: string) => {
-    if (selectedDatasets.includes(datasetId)) {
-      onSelectionChange(selectedDatasets.filter((id) => id !== datasetId));
+  const toggleDataset = (dataset: UserDataset) => {
+    const isSelected = selectedDatasets.some(d => d.id === dataset.id);
+    if (isSelected) {
+      onSelectionChange(selectedDatasets.filter((d) => d.id !== dataset.id));
     } else {
-      onSelectionChange([...selectedDatasets, datasetId]);
+      onSelectionChange([...selectedDatasets, dataset]);
     }
   };
 
@@ -64,20 +65,20 @@ const DatasetSelector: React.FC<DatasetSelectorProps> = ({
       ) : (
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
           {datasets.map((dataset) => {
-            const isSelected = selectedDatasets.includes(dataset.id);
+            const isSelected = selectedDatasets.some(d => d.id === dataset.id);
             return (
               <Card
                 key={dataset.id}
                 size="small"
                 hoverable
-                onClick={() => toggleDataset(dataset.id)}
+                onClick={() => toggleDataset(dataset)}
                 style={{
                   cursor: 'pointer',
                   border: isSelected ? '2px solid #fa8c16' : '1px solid #d9d9d9',
                   backgroundColor: isSelected ? '#fff7e6' : '#fff',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Checkbox checked={isSelected} />
                   <div
                     style={{
@@ -99,14 +100,9 @@ const DatasetSelector: React.FC<DatasetSelectorProps> = ({
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <Space direction="vertical" size={4} style={{ width: '100%' }}>
                       <Text strong>{dataset.name}</Text>
-                      {dataset.file_path && (
-                        <Space size={4}>
-                          <FileOutlined style={{ color: '#8c8c8c' }} />
-                          <Text type="secondary" style={{ fontSize: 12 }}>
-                            {dataset.file_path.split('/').pop()}
-                          </Text>
-                        </Space>
-                      )}
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {dataset.row_count ? `${dataset.row_count} вопросов` : 'Количество вопросов неизвестно'}
+                      </Text>
                     </Space>
                   </div>
                 </div>

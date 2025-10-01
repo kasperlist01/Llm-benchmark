@@ -7,12 +7,12 @@ import { benchmarksAPI } from '../services/api';
 const { Text } = Typography;
 
 interface BenchmarkSelectorProps {
-  selectedBenchmarks: string[];
-  onSelectionChange: (benchmarks: string[]) => void;
+  selectedBenchmark: Benchmark | null;
+  onSelectionChange: (benchmark: Benchmark | null) => void;
 }
 
 const BenchmarkSelector: React.FC<BenchmarkSelectorProps> = ({
-  selectedBenchmarks,
+  selectedBenchmark,
   onSelectionChange,
 }) => {
   const [benchmarks, setBenchmarks] = useState<Benchmark[]>([]);
@@ -34,11 +34,12 @@ const BenchmarkSelector: React.FC<BenchmarkSelectorProps> = ({
     }
   };
 
-  const toggleBenchmark = (benchmarkId: string) => {
-    if (selectedBenchmarks.includes(benchmarkId)) {
-      onSelectionChange(selectedBenchmarks.filter((id) => id !== benchmarkId));
+  const toggleBenchmark = (benchmark: Benchmark) => {
+    const isSelected = selectedBenchmark?.id === benchmark.id;
+    if (isSelected) {
+      onSelectionChange(null);
     } else {
-      onSelectionChange([...selectedBenchmarks, benchmarkId]);
+      onSelectionChange(benchmark);
     }
   };
 
@@ -59,13 +60,13 @@ const BenchmarkSelector: React.FC<BenchmarkSelectorProps> = ({
       ) : (
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
           {benchmarks.map((benchmark) => {
-            const isSelected = selectedBenchmarks.includes(benchmark.id);
+            const isSelected = selectedBenchmark?.id === benchmark.id;
             return (
               <Card
                 key={benchmark.id}
                 size="small"
                 hoverable
-                onClick={() => toggleBenchmark(benchmark.id)}
+                onClick={() => toggleBenchmark(benchmark)}
                 style={{
                   cursor: 'pointer',
                   border: isSelected ? '2px solid #52c41a' : '1px solid #d9d9d9',
@@ -73,7 +74,7 @@ const BenchmarkSelector: React.FC<BenchmarkSelectorProps> = ({
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                  <Checkbox checked={isSelected} />
+                  <Checkbox checked={isSelected} style={{ pointerEvents: 'none' }} />
                   <div style={{ flex: 1 }}>
                     <Space direction="vertical" size={4} style={{ width: '100%' }}>
                       <Text strong>{benchmark.name}</Text>

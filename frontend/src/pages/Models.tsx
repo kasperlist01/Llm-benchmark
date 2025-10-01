@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Button, Typography, Space, Badge, Empty, Spin, Modal, Form, Input, Select, message, Row, Col, Tag } from 'antd';
-import { PlusOutlined, DeleteOutlined, ExperimentOutlined, ApiOutlined, CheckCircleOutlined, WarningOutlined, EditOutlined } from '@ant-design/icons';
+import { Card, Button, Typography, Space, Badge, Empty, Spin, Modal, Form, Input, Select, message, Row, Col, Tag, notification } from 'antd';
+import { PlusOutlined, DeleteOutlined, ExperimentOutlined, ApiOutlined, CheckCircleOutlined, WarningOutlined, EditOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { modelsAPI, settingsAPI } from '../services/api';
 import { UserModel, APIIntegration } from '../types';
 
@@ -16,6 +16,16 @@ const Models: React.FC = () => {
   const [testingModel, setTestingModel] = useState<number | null>(null);
   const [editingModel, setEditingModel] = useState<UserModel | null>(null);
   const [form] = Form.useForm();
+  
+  useEffect(() => {
+    // Configure notifications on component mount
+    notification.config({
+      placement: 'topRight',
+      duration: 10,
+      top: 80,
+      getContainer: () => document.body,
+    });
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -93,13 +103,25 @@ const Models: React.FC = () => {
     setTestingModel(modelId);
     try {
       const result = await modelsAPI.testModel(modelId);
-      if (result.success) {
-        message.success(result.message || 'Тест успешно пройден! Модель работает корректно.', 5);
+      console.log('Test model result:', result);
+      
+      if (result && result.success === true) {
+        const successMessage = result.message || 'Тест успешно пройден! Модель работает корректно.';
+        const responseContent = result.response?.content ? `\n\nОтвет модели:\n${result.response.content}` : '';
+        
+        // Используем alert как самое надежное уведомление
+        alert('УСПЕХ!\n\n' + successMessage + responseContent);
+      } else if (result && result.success === false) {
+        const errorMessage = result.message || 'Тест не пройден. Проверьте настройки API.';
+        alert('ОШИБКА\n\n' + errorMessage);
       } else {
-        message.error(result.message || 'Тест не пройден. Проверьте настройки API.', 5);
+        console.warn('Unexpected result format:', result);
+        alert('ПРЕДУПРЕЖДЕНИЕ\n\nТест завершен, но статус неопределен. Проверьте настройки API.');
       }
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Ошибка при тестировании модели', 5);
+      console.error('Test model error:', error);
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Ошибка при тестировании модели';
+      alert('❌ ОШИБКА\n\n' + errorMessage);
     } finally {
       setTestingModel(null);
     }
@@ -133,6 +155,56 @@ const Models: React.FC = () => {
             Добавить модель
           </Button>
         </div>
+
+        {/* Выбор модели-судьи */}
+        <Card
+          title={
+            <Space>
+              <ApiOutlined />
+              <span>Модель-судья</span>
+            </Space>
+          }
+          style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+        >
+          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+              Выберите модель, которая будет использоваться для автоматической оценки других моделей
+            </Paragraph>
+
+            <Select
+              size="large"
+              style={{ width: '100%', maxWidth: 500 }}
+              value={judgeModelId ? String(judgeModelId) : '0'}
+              onChange={async (value) => {
+                try {
+                  const newJudgeModelId = value === '0' ? null : parseInt(value);
+                  await settingsAPI.updateSettings({
+                    judge_model_id: newJudgeModelId,
+                  });
+                  setJudgeModelId(newJudgeModelId);
+                  message.success('Модель-судья успешно обновлена!');
+                  loadData(); // Перезагружаем данные для обновления тегов
+                } catch (error: any) {
+                  message.error(error.response?.data?.error || 'Ошибка при обновлении модели-судьи');
+                }
+              }}
+              placeholder="Выберите модель-судью"
+            >
+              <Select.Option value="0">Не выбрано</Select.Option>
+              {models.map((model) => {
+                const modelIdNum = parseInt(model.id.replace('custom_', ''));
+                return (
+                  <Select.Option key={model.id} value={String(modelIdNum)}>
+                    {model.name}
+                  </Select.Option>
+                );
+              })}
+            </Select>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Только модели с настроенными API интеграциями могут выступать в роли судьи
+            </Text>
+          </Space>
+        </Card>
 
         {models.length > 0 ? (
           <Row gutter={[16, 16]}>

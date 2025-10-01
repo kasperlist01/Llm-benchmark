@@ -7,8 +7,8 @@ import { modelsAPI } from '../services/api';
 const { Text, Link } = Typography;
 
 interface ModelSelectorProps {
-  selectedModels: string[];
-  onSelectionChange: (models: string[]) => void;
+  selectedModels: UserModel[];
+  onSelectionChange: (models: UserModel[]) => void;
 }
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModels, onSelectionChange }) => {
@@ -38,11 +38,12 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModels, onSelecti
     }
   };
 
-  const toggleModel = (modelId: string) => {
-    if (selectedModels.includes(modelId)) {
-      onSelectionChange(selectedModels.filter((id) => id !== modelId));
+  const toggleModel = (model: UserModel) => {
+    const isSelected = selectedModels.some(m => m.id === model.id);
+    if (isSelected) {
+      onSelectionChange(selectedModels.filter((m) => m.id !== model.id));
     } else {
-      onSelectionChange([...selectedModels, modelId]);
+      onSelectionChange([...selectedModels, model]);
     }
   };
 
@@ -68,7 +69,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModels, onSelecti
       ) : (
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
           {models.map((model) => {
-            const isSelected = selectedModels.includes(model.id);
+            const isSelected = selectedModels.some(m => m.id === model.id);
             const isJudgeModel = judgeModelId && model.id === judgeModelId;
 
             return (
@@ -76,7 +77,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModels, onSelecti
                 key={model.id}
                 size="small"
                 hoverable
-                onClick={() => toggleModel(model.id)}
+                onClick={() => toggleModel(model)}
                 style={{
                   cursor: 'pointer',
                   border: isSelected ? '2px solid #1890ff' : '1px solid #d9d9d9',
