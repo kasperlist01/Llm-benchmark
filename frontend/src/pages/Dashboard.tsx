@@ -85,7 +85,7 @@ const Dashboard: React.FC = () => {
     }
 
     if (selectedDatasets.length === 0) {
-      message.error('Пожалуйста, выберите хотя бы один набор вопросов для проведения тестирования');
+      message.error('Пожалуйста, выберите хотя бы один вопрос для проведения тестирования');
       return;
     }
 
@@ -321,7 +321,7 @@ const Dashboard: React.FC = () => {
                     <div>
                       <Space style={{ marginBottom: 8 }}>
                         <DatabaseOutlined style={{ fontSize: 18, color: '#fa8c16' }} />
-                        <Text strong>Выбранные наборы вопросов</Text>
+                        <Text strong>Выбранные вопросы</Text>
                         <Badge 
                           count={selectedDatasets.length} 
                           showZero 
@@ -335,7 +335,7 @@ const Dashboard: React.FC = () => {
                         minHeight: '60px'
                       }}>
                         {selectedDatasets.length === 0 ? (
-                          <Text type="secondary">Наборы вопросов не выбраны</Text>
+                          <Text type="secondary">Вопросы не выбраны</Text>
                         ) : (
                           <Space wrap size={[8, 8]}>
                             {selectedDatasets.map((dataset) => (
