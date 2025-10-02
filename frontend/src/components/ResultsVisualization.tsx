@@ -217,7 +217,7 @@ const JudgeEvalView: React.FC<{ data: any }> = ({ data }) => {
                 <Text><Text strong>Победитель:</Text> {pair.evaluation.winner}</Text>
                 <div>
                   <Text strong>Обоснование:</Text>
-                  <Paragraph style={{ marginTop: 8 }}>{pair.evaluation.reasoning}</Paragraph>
+                  <Paragraph style={{ marginTop: 8, whiteSpace: 'pre-line' }}>{pair.evaluation.reasoning}</Paragraph>
                 </div>
               </Space>
             </Card>
@@ -296,7 +296,7 @@ const ReferenceComparisonView: React.FC<{ data: any }> = ({ data }) => {
                   </div>
                   
                   <Card size="small" title="Оценка судьи" style={{ backgroundColor: '#f0f5ff' }}>
-                    <Paragraph>{resp.reasoning}</Paragraph>
+                    <Paragraph style={{ whiteSpace: 'pre-line' }}>{resp.reasoning}</Paragraph>
                   </Card>
                 </Space>
               </Panel>
