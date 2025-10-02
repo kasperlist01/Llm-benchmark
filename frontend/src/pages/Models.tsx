@@ -233,9 +233,6 @@ const Models: React.FC = () => {
                             {model.name.substring(0, 2).toUpperCase()}
                           </div>
                           <span>{model.name}</span>
-                          {model.api_integration && (
-                            <Tag color="success" style={{ margin: 0 }}>API</Tag>
-                          )}
                         </Space>
                       </Select.Option>
                     );
