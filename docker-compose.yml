@@ -19,7 +19,7 @@ services:
       timeout: 5s
       retries: 5
 
-  web:
+  backend:
     build: .
     container_name: llm-benchmark-backend
     ports:
@@ -59,7 +59,7 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
     depends_on:
-      - web
+      - backend
     restart: unless-stopped
     stdin_open: true
     tty: true
