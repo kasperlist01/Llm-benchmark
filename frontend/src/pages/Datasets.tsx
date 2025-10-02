@@ -160,8 +160,16 @@ const Datasets: React.FC = () => {
 
     try {
       const datasetIdNum = parseInt(editingDataset.id.replace('dataset_', ''));
+      
+      // Обновляем название и описание
+      await datasetsAPI.updateDataset(datasetIdNum, {
+        name: values.name,
+        description: values.description || '',
+      });
+      
+      // Обновляем данные
       await datasetsAPI.saveDatasetData(datasetIdNum, validRows);
-      message.success('Данные вопросов успешно обновлены!');
+      message.success('Вопросы успешно обновлены!');
       setShowEditDataModal(false);
       setEditingDataset(null);
       editDataForm.resetFields();
@@ -349,7 +357,11 @@ const Datasets: React.FC = () => {
                               try {
                                 const result = await datasetsAPI.getDatasetData(datasetIdNum);
                                 setDatasetData(result.data);
-                                editDataForm.setFieldsValue({ rows: result.data });
+                                editDataForm.setFieldsValue({ 
+                                  name: dataset.name,
+                                  description: dataset.description,
+                                  rows: result.data 
+                                });
                               } catch (error: any) {
                                 message.error(error.response?.data?.error || 'Ошибка загрузки данных');
                                 setShowEditDataModal(false);
@@ -602,6 +614,18 @@ const Datasets: React.FC = () => {
             layout="vertical"
             onFinish={handleEditDataSubmit}
           >
+            <Form.Item
+              name="name"
+              label="Название"
+              rules={[{ required: true, message: 'Введите название' }]}
+            >
+              <Input placeholder="Например: Тестовые вопросы" size="large" />
+            </Form.Item>
+
+            <Form.Item name="description" label="Описание">
+              <TextArea rows={2} placeholder="Краткое описание вопросов" />
+            </Form.Item>
+
             <Form.Item label={`Данные вопросов (${datasetData.length} ${getPluralForm(datasetData.length, 'строка', 'строки', 'строк')})`}>
               <Form.List name="rows">
                 {(fields, { add, remove }) => (
