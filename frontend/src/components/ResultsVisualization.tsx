@@ -81,7 +81,7 @@ const MetricsComparisonView: React.FC<{ data: any }> = ({ data }) => {
               <Panel 
                 header={
                   <Space>
-                    <Text>Промпт {respIdx + 1}</Text>
+                    <Text>Вопрос {respIdx + 1}</Text>
                     <Tag color="blue">{resp.weightedScore} баллов</Tag>
                   </Space>
                 }
@@ -89,7 +89,7 @@ const MetricsComparisonView: React.FC<{ data: any }> = ({ data }) => {
               >
                 <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                   <div>
-                    <Text strong>Промпт:</Text>
+                    <Text strong>Вопрос:</Text>
                     <Paragraph style={{ marginTop: 8 }}>{resp.prompt}</Paragraph>
                   </div>
                   
@@ -189,7 +189,7 @@ const JudgeEvalView: React.FC<{ data: any }> = ({ data }) => {
         >
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             <div>
-              <Text strong>Промпт:</Text>
+              <Text strong>Вопрос:</Text>
               <Paragraph style={{ marginTop: 8 }}>{pair.prompt}</Paragraph>
             </div>
 
@@ -271,7 +271,7 @@ const ReferenceComparisonView: React.FC<{ data: any }> = ({ data }) => {
               <Panel 
                 header={
                   <Space>
-                    <Text>Промпт {respIdx + 1}</Text>
+                    <Text>Вопрос {respIdx + 1}</Text>
                     <Tag color={resp.score >= 7 ? 'green' : resp.score >= 4 ? 'orange' : 'red'}>
                       {resp.score}/10
                     </Tag>
@@ -281,7 +281,7 @@ const ReferenceComparisonView: React.FC<{ data: any }> = ({ data }) => {
               >
                 <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                   <div>
-                    <Text strong>Промпт:</Text>
+                    <Text strong>Вопрос:</Text>
                     <Paragraph style={{ marginTop: 8 }}>{resp.prompt}</Paragraph>
                   </div>
                   

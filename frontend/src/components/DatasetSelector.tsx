@@ -6,6 +6,26 @@ import { datasetsAPI } from '../services/api';
 
 const { Text, Link } = Typography;
 
+// Helper function for Russian plural forms
+const getPluralForm = (count: number): string => {
+  const lastDigit = count % 10;
+  const lastTwoDigits = count % 100;
+  
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+    return 'вопросов';
+  }
+  
+  if (lastDigit === 1) {
+    return 'вопрос';
+  }
+  
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return 'вопроса';
+  }
+  
+  return 'вопросов';
+};
+
 interface DatasetSelectorProps {
   selectedDatasets: UserDataset[];
   onSelectionChange: (datasets: UserDataset[]) => void;
@@ -101,7 +121,7 @@ const DatasetSelector: React.FC<DatasetSelectorProps> = ({
                     <Space direction="vertical" size={4} style={{ width: '100%' }}>
                       <Text strong>{dataset.name}</Text>
                       <Text type="secondary" style={{ fontSize: 12 }}>
-                        {dataset.row_count ? `${dataset.row_count} вопросов` : 'Количество вопросов неизвестно'}
+                        {dataset.row_count ? `${dataset.row_count} ${getPluralForm(dataset.row_count)}` : 'Количество вопросов неизвестно'}
                       </Text>
                     </Space>
                   </div>

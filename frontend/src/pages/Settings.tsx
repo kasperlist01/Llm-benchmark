@@ -101,7 +101,6 @@ const Settings: React.FC = () => {
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <div>
           <Title level={2} style={{ marginBottom: 8 }}>Настройки</Title>
-          <Text type="secondary">Управление профилем и настройками безопасности</Text>
         </div>
 
         <Row gutter={[16, 16]}>
@@ -124,10 +123,9 @@ const Settings: React.FC = () => {
                   >
                     {user?.username?.charAt(0).toUpperCase() || 'U'}
                   </Avatar>
-                  <Title level={4} style={{ marginTop: 16, marginBottom: 4 }}>
+                  <Title level={4} style={{ marginTop: 16, marginBottom: 0 }}>
                     {user?.username || 'Username'}
                   </Title>
-                  <Text type="secondary">ID: {user?.id || 'N/A'}</Text>
                 </div>
 
                 <Divider />
@@ -156,6 +154,22 @@ const Settings: React.FC = () => {
                         dataSource={integrations}
                         renderItem={(integration) => (
                           <List.Item
+                            style={{
+                              padding: '12px',
+                              marginBottom: '8px',
+                              border: '2px solid #d9d9d9',
+                              borderRadius: '8px',
+                              backgroundColor: '#fafafa',
+                              transition: 'all 0.3s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = '#1890ff';
+                              e.currentTarget.style.backgroundColor = '#f0f5ff';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = '#d9d9d9';
+                              e.currentTarget.style.backgroundColor = '#fafafa';
+                            }}
                             actions={[
                               <Button
                                 type="text"

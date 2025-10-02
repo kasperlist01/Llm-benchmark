@@ -8,6 +8,26 @@ import { UserDataset } from '../types';
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
+// Helper function for Russian plural forms
+const getPluralForm = (count: number, one: string, few: string, many: string): string => {
+  const lastDigit = count % 10;
+  const lastTwoDigits = count % 100;
+  
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+    return many;
+  }
+  
+  if (lastDigit === 1) {
+    return one;
+  }
+  
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return few;
+  }
+  
+  return many;
+};
+
 const Datasets: React.FC = () => {
   const [datasets, setDatasets] = useState<UserDataset[]>([]);
   const [loading, setLoading] = useState(true);
@@ -168,7 +188,6 @@ const Datasets: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div>
             <Title level={2} style={{ marginBottom: 8 }}>Мои датасеты</Title>
-            <Text type="secondary">Управление вашими датасетами для тестирования</Text>
           </div>
           <Space>
             <Button
@@ -515,15 +534,15 @@ const Datasets: React.FC = () => {
                       <Form.Item
                         {...field}
                         name={[field.name, 'prompt']}
-                        label="Prompt (запрос)"
+                        label="Вопрос"
                         style={{ marginBottom: 12 }}
                       >
-                        <TextArea rows={2} placeholder="Введите запрос..." />
+                        <TextArea rows={2} placeholder="Введите вопрос..." />
                       </Form.Item>
                       <Form.Item
                         {...field}
                         name={[field.name, 'reference']}
-                        label="Reference (эталон)"
+                        label="Эталонный ответ"
                         style={{ marginBottom: 0 }}
                       >
                         <TextArea rows={2} placeholder="Введите эталонный ответ..." />
@@ -583,7 +602,7 @@ const Datasets: React.FC = () => {
             layout="vertical"
             onFinish={handleEditDataSubmit}
           >
-            <Form.Item label={`Данные датасета (${datasetData.length} строк)`}>
+            <Form.Item label={`Данные датасета (${datasetData.length} ${getPluralForm(datasetData.length, 'строка', 'строки', 'строк')})`}>
               <Form.List name="rows">
                 {(fields, { add, remove }) => (
                   <>
@@ -607,15 +626,15 @@ const Datasets: React.FC = () => {
                         <Form.Item
                           {...field}
                           name={[field.name, 'prompt']}
-                          label="Prompt (запрос)"
+                          label="Вопрос"
                           style={{ marginBottom: 12 }}
                         >
-                          <TextArea rows={2} placeholder="Введите запрос..." />
+                          <TextArea rows={2} placeholder="Введите вопрос..." />
                         </Form.Item>
                         <Form.Item
                           {...field}
                           name={[field.name, 'reference']}
-                          label="Reference (эталон)"
+                          label="Эталонный ответ"
                           style={{ marginBottom: 0 }}
                         >
                           <TextArea rows={2} placeholder="Введите эталонный ответ..." />
@@ -678,7 +697,7 @@ const Datasets: React.FC = () => {
                 <Card key={index} size="small" title={`Строка ${index + 1}`}>
                   <Space direction="vertical" style={{ width: '100%' }}>
                     <div>
-                      <Text strong style={{ color: '#1890ff' }}>Prompt:</Text>
+                      <Text strong style={{ color: '#1890ff' }}>Вопрос:</Text>
                       <div style={{ 
                         marginTop: 8, 
                         padding: 12, 
@@ -691,7 +710,7 @@ const Datasets: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <Text strong style={{ color: '#52c41a' }}>Reference:</Text>
+                      <Text strong style={{ color: '#52c41a' }}>Эталонный ответ:</Text>
                       <div style={{ 
                         marginTop: 8, 
                         padding: 12, 

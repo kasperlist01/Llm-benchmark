@@ -144,7 +144,6 @@ const Models: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <Title level={2} style={{ marginBottom: 8 }}>Мои модели</Title>
-            <Text type="secondary">Управление вашими LLM-моделями</Text>
           </div>
           <Button
             type="primary"

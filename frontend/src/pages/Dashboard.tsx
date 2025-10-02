@@ -240,7 +240,29 @@ const Dashboard: React.FC = () => {
                         ) : (
                           <Space wrap size={[8, 8]}>
                             {selectedModels.map((model) => (
-                              <Tag key={model.id} color="blue">{model.name}</Tag>
+                              <div
+                                key={model.id}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 6,
+                                  padding: '4px 12px',
+                                  backgroundColor: '#fff',
+                                  border: '1px solid #e8e8e8',
+                                  borderRadius: '6px',
+                                  fontSize: 13,
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: '50%',
+                                    backgroundColor: '#1890ff',
+                                  }}
+                                />
+                                <Text style={{ fontSize: 13 }}>{model.name}</Text>
+                              </div>
                             ))}
                           </Space>
                         )}
@@ -268,7 +290,28 @@ const Dashboard: React.FC = () => {
                         {!selectedBenchmark ? (
                           <Text type="secondary">Тест не выбран</Text>
                         ) : (
-                          <Tag color="green">{selectedBenchmark.name}</Tag>
+                          <div
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              padding: '4px 12px',
+                              backgroundColor: '#fff',
+                              border: '1px solid #e8e8e8',
+                              borderRadius: '6px',
+                              fontSize: 13,
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: '50%',
+                                backgroundColor: '#52c41a',
+                              }}
+                            />
+                            <Text style={{ fontSize: 13 }}>{selectedBenchmark.name}</Text>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -296,7 +339,29 @@ const Dashboard: React.FC = () => {
                         ) : (
                           <Space wrap size={[8, 8]}>
                             {selectedDatasets.map((dataset) => (
-                              <Tag key={dataset.id} color="orange">{dataset.name}</Tag>
+                              <div
+                                key={dataset.id}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 6,
+                                  padding: '4px 12px',
+                                  backgroundColor: '#fff',
+                                  border: '1px solid #e8e8e8',
+                                  borderRadius: '6px',
+                                  fontSize: 13,
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: '50%',
+                                    backgroundColor: '#fa8c16',
+                                  }}
+                                />
+                                <Text style={{ fontSize: 13 }}>{dataset.name}</Text>
+                              </div>
                             ))}
                           </Space>
                         )}
