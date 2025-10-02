@@ -62,7 +62,7 @@ const Datasets: React.FC = () => {
   const handleSubmit = async (values: any) => {
     try {
       if (editingDataset) {
-        // Редактирование существующего датасета
+        // Редактирование существующего набора вопросов
         const datasetIdNum = parseInt(editingDataset.id.replace('dataset_', ''));
         
         // Обновляем имя и описание
@@ -76,12 +76,12 @@ const Datasets: React.FC = () => {
           const formData = new FormData();
           formData.append('csv_file', fileList[0].originFileObj as File);
           await datasetsAPI.updateDatasetContent(datasetIdNum, formData);
-          message.success('Датасет и его содержимое успешно обновлены!');
+          message.success('Набор вопросов и его содержимое успешно обновлены!');
         } else {
-          message.success('Датасет успешно обновлен!');
+          message.success('Набор вопросов успешно обновлен!');
         }
       } else {
-        // Добавление нового датасета
+        // Добавление нового набора вопросов
         if (fileList.length === 0) {
           message.error('Пожалуйста, выберите CSV файл');
           return;
@@ -93,7 +93,7 @@ const Datasets: React.FC = () => {
         formData.append('csv_file', fileList[0].originFileObj as File);
 
         await datasetsAPI.addDataset(formData);
-        message.success('Датасет успешно загружен!');
+        message.success('Набор вопросов успешно загружен!');
       }
       
       setShowModal(false);
@@ -102,24 +102,24 @@ const Datasets: React.FC = () => {
       setFileList([]);
       loadData();
     } catch (error: any) {
-      message.error(error.response?.data?.error || 'Ошибка при сохранении датасета');
+      message.error(error.response?.data?.error || 'Ошибка при сохранении набора вопросов');
     }
   };
 
   const handleDelete = async (datasetId: number) => {
     Modal.confirm({
       title: 'Подтверждение удаления',
-      content: 'Вы уверены, что хотите удалить этот датасет?',
+      content: 'Вы уверены, что хотите удалить этот набор вопросов?',
       okText: 'Удалить',
       okType: 'danger',
       cancelText: 'Отмена',
       onOk: async () => {
         try {
           await datasetsAPI.deleteDataset(datasetId);
-          message.success('Датасет успешно удален');
+          message.success('Набор вопросов успешно удален');
           loadData();
         } catch (error: any) {
-          message.error(error.response?.data?.error || 'Ошибка при удалении датасета');
+          message.error(error.response?.data?.error || 'Ошибка при удалении набора вопросов');
         }
       },
     });
@@ -139,12 +139,12 @@ const Datasets: React.FC = () => {
         description: values.description || '',
         rows: validRows,
       });
-      message.success('Датасет успешно создан!');
+      message.success('Набор вопросов успешно создан!');
       setShowWebModal(false);
       webForm.resetFields();
       loadData();
     } catch (error: any) {
-      message.error(error.response?.data?.error || 'Ошибка при создании датасета');
+      message.error(error.response?.data?.error || 'Ошибка при создании набора вопросов');
     }
   };
 
@@ -154,14 +154,14 @@ const Datasets: React.FC = () => {
     const validRows = values.rows.filter((row: any) => row?.prompt?.trim() || row?.reference?.trim());
     
     if (validRows.length === 0) {
-      message.error('Датасет должен содержать хотя бы одну строку с данными');
+      message.error('Набор вопросов должен содержать хотя бы одну строку с данными');
       return;
     }
 
     try {
       const datasetIdNum = parseInt(editingDataset.id.replace('dataset_', ''));
       await datasetsAPI.saveDatasetData(datasetIdNum, validRows);
-      message.success('Данные датасета успешно обновлены!');
+      message.success('Данные набора вопросов успешно обновлены!');
       setShowEditDataModal(false);
       setEditingDataset(null);
       editDataForm.resetFields();
@@ -187,7 +187,7 @@ const Datasets: React.FC = () => {
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <Title level={2} style={{ marginBottom: 8 }}>Мои датасеты</Title>
+            <Title level={2} style={{ marginBottom: 8 }}>Мои наборы вопросов</Title>
           </div>
           <Space>
             <Button
@@ -285,7 +285,7 @@ const Datasets: React.FC = () => {
                         marginBottom: 16,
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                          <Text strong style={{ fontSize: 15 }}>Записей в датасете</Text>
+                          <Text strong style={{ fontSize: 15 }}>Записей в наборе</Text>
                           <div style={{
                             background: '#1890ff',
                             color: '#fff',
@@ -389,9 +389,9 @@ const Datasets: React.FC = () => {
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
                 <Space direction="vertical" size="small">
-                  <Text strong>Нет датасетов</Text>
+                  <Text strong>Нет наборов вопросов</Text>
                   <Text type="secondary">
-                    Добавьте CSV датасеты для использования в тестировании моделей
+                    Добавьте CSV наборы вопросов для использования в тестировании моделей
                   </Text>
                 </Space>
               }
@@ -417,7 +417,7 @@ const Datasets: React.FC = () => {
       </Space>
 
       <Modal
-        title={editingDataset ? 'Редактировать датасет' : 'Добавить датасет'}
+        title={editingDataset ? 'Редактировать набор вопросов' : 'Добавить набор вопросов'}
         open={showModal}
         onCancel={() => {
           setShowModal(false);
@@ -431,21 +431,21 @@ const Datasets: React.FC = () => {
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
             name="name"
-            label="Название датасета"
-            rules={[{ required: true, message: 'Введите название датасета' }]}
+            label="Название набора вопросов"
+            rules={[{ required: true, message: 'Введите название набора вопросов' }]}
           >
             <Input placeholder="Например: Тестовые вопросы" size="large" />
           </Form.Item>
 
           <Form.Item name="description" label="Описание">
-            <TextArea rows={3} placeholder="Краткое описание датасета" />
+            <TextArea rows={3} placeholder="Краткое описание набора вопросов" />
           </Form.Item>
 
           <Form.Item
             label={editingDataset ? "Новый CSV файл (опционально)" : "CSV файл"}
             required={!editingDataset}
             extra={editingDataset 
-              ? "Загрузите новый CSV файл для замены содержимого датасета (оставьте пустым, чтобы сохранить текущее содержимое)"
+              ? "Загрузите новый CSV файл для замены содержимого набора вопросов (оставьте пустым, чтобы сохранить текущее содержимое)"
               : "Загрузите CSV файл с колонками для prompts и reference answers"
             }
           >
@@ -473,7 +473,7 @@ const Datasets: React.FC = () => {
                 Отмена
               </Button>
               <Button type="primary" htmlType="submit">
-                {editingDataset ? 'Сохранить' : 'Загрузить датасет'}
+                {editingDataset ? 'Сохранить' : 'Загрузить набор вопросов'}
               </Button>
             </Space>
           </Form.Item>
@@ -481,7 +481,7 @@ const Datasets: React.FC = () => {
       </Modal>
 
       <Modal
-        title="Создать датасет в браузере"
+        title="Создать набор вопросов в браузере"
         open={showWebModal}
         onCancel={() => {
           setShowWebModal(false);
@@ -498,14 +498,14 @@ const Datasets: React.FC = () => {
         >
           <Form.Item
             name="name"
-            label="Название датасета"
-            rules={[{ required: true, message: 'Введите название датасета' }]}
+            label="Название набора вопросов"
+            rules={[{ required: true, message: 'Введите название набора вопросов' }]}
           >
             <Input placeholder="Например: Тестовые вопросы" size="large" />
           </Form.Item>
 
           <Form.Item name="description" label="Описание">
-            <TextArea rows={2} placeholder="Краткое описание датасета" />
+            <TextArea rows={2} placeholder="Краткое описание набора вопросов" />
           </Form.Item>
 
           <Form.Item label="Данные">
@@ -571,7 +571,7 @@ const Datasets: React.FC = () => {
                 Отмена
               </Button>
               <Button type="primary" htmlType="submit">
-                Создать датасет
+                Создать набор вопросов
               </Button>
             </Space>
           </Form.Item>
@@ -602,7 +602,7 @@ const Datasets: React.FC = () => {
             layout="vertical"
             onFinish={handleEditDataSubmit}
           >
-            <Form.Item label={`Данные датасета (${datasetData.length} ${getPluralForm(datasetData.length, 'строка', 'строки', 'строк')})`}>
+            <Form.Item label={`Данные набора вопросов (${datasetData.length} ${getPluralForm(datasetData.length, 'строка', 'строки', 'строк')})`}>
               <Form.List name="rows">
                 {(fields, { add, remove }) => (
                   <>

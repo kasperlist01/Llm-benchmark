@@ -67,7 +67,7 @@ const Navbar: React.FC = () => {
         {
           key: '/datasets',
           icon: <DatabaseOutlined />,
-          label: <Link to="/datasets">Мои датасеты</Link>,
+          label: <Link to="/datasets">Мои наборы вопросов</Link>,
         },
         {
           key: '/settings',

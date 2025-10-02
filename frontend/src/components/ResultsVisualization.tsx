@@ -52,7 +52,7 @@ const MetricsComparisonView: React.FC<{ data: any }> = ({ data }) => {
         
         {data.datasetsUsed && data.datasetsUsed.length > 0 && (
           <div style={{ marginTop: 16 }}>
-            <Text strong><DatabaseOutlined /> Использованные датасеты:</Text>
+            <Text strong><DatabaseOutlined /> Использованные наборы вопросов:</Text>
             <div style={{ marginTop: 8 }}>
               <Space size={[8, 8]} wrap>
                 {data.datasetsUsed.map((dataset: string, idx: number) => (
@@ -364,7 +364,7 @@ const BlindTestView: React.FC<{ results: any; blindTestData: any; setBlindTestDa
           {blindTestData.datasetsUsed && blindTestData.datasetsUsed.length > 0 && (
             <div>
               <Text strong>
-                <DatabaseOutlined /> Использованные датасеты:
+                <DatabaseOutlined /> Использованные наборы вопросов:
               </Text>
               <div style={{ marginTop: 8 }}>
                 <Space size={[8, 8]} wrap>

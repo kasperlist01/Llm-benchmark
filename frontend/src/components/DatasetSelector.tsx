@@ -65,7 +65,7 @@ const DatasetSelector: React.FC<DatasetSelectorProps> = ({
 
   return (
     <Card
-      title="Датасеты"
+      title="Наборы вопросов"
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
     >
       {loading ? (
@@ -77,8 +77,8 @@ const DatasetSelector: React.FC<DatasetSelectorProps> = ({
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={
             <Space direction="vertical" size="small">
-              <Text>У вас пока нет загруженных датасетов</Text>
-              <Link href="/datasets">Загрузите датасеты</Link>
+              <Text>У вас пока нет загруженных наборов вопросов</Text>
+              <Link href="/datasets">Загрузите наборы вопросов</Link>
             </Space>
           }
         />
