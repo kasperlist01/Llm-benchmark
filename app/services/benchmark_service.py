@@ -6,8 +6,20 @@ import re
 import requests
 from collections import Counter
 
+from bert_score import score as bert_score
+from sentence_transformers import SentenceTransformer
+import numpy as np
+
 from app.models.user_dataset import UserDataset
 from app.schemas.benchmark_dto import RunBenchmarkRequest, RunBenchmarkResult
+
+
+_bert_model_type = "microsoft/deberta-base-mnli"
+_bert_model_lang = "en"
+_bert_model_initialized = False
+
+_semantic_model_name = "sentence-transformers/distiluse-base-multilingual-cased-v1"
+_semantic_model = None
 
 
 def clean_model_response(response):
@@ -272,56 +284,82 @@ def calculate_rouge_score(reference, candidate):
 
 
 def calculate_semantic_similarity(reference, candidate):
-    def text_to_vector(text):
-        words = re.findall(r'\w+', text.lower())
-        word_count = Counter(words)
-        return word_count
+    """
+    Вычисляет семантическую близость двух текстов по эмбеддингам предложений.
 
-    def cosine_similarity(vec1, vec2):
-        all_words = set(vec1.keys()) | set(vec2.keys())
+    :param reference: эталонный ответ
+    :param candidate: сгенерированный моделью ответ
+    :return: значение от 0 до 1, где 1 означает максимальное семантическое сходство
+    """
+    if not reference or not candidate:
+        return 0.0
 
-        if not all_words:
+    try:
+        global _semantic_model
+
+        if _semantic_model is None:
+            _semantic_model = SentenceTransformer(_semantic_model_name)
+
+        embeddings = _semantic_model.encode([reference, candidate])
+        ref_vec, cand_vec = embeddings[0], embeddings[1]
+
+        dot = float(np.dot(ref_vec, cand_vec))
+        norm_ref = float(np.linalg.norm(ref_vec))
+        norm_cand = float(np.linalg.norm(cand_vec))
+
+        if norm_ref == 0.0 or norm_cand == 0.0:
             return 0.0
 
-        v1 = [vec1.get(word, 0) for word in all_words]
-        v2 = [vec2.get(word, 0) for word in all_words]
+        sim = dot / (norm_ref * norm_cand)
 
-        dot_product = sum(a * b for a, b in zip(v1, v2))
-        magnitude1 = math.sqrt(sum(a * a for a in v1))
-        magnitude2 = math.sqrt(sum(a * a for a in v2))
+        score = (sim + 1.0) / 2.0
+    except Exception:
+        score = 0.0
 
-        if magnitude1 == 0 or magnitude2 == 0:
-            return 0.0
+    if score < 0.0:
+        score = 0.0
+    elif score > 1.0:
+        score = 1.0
 
-        return dot_product / (magnitude1 * magnitude2)
-
-    ref_vector = text_to_vector(reference)
-    cand_vector = text_to_vector(candidate)
-
-    return cosine_similarity(ref_vector, cand_vector)
+    return score
 
 
 def calculate_bert_score(reference, candidate):
-    ref_tokens = re.findall(r'\w+', reference.lower())
-    cand_tokens = re.findall(r'\w+', candidate.lower())
+    """
+    Вычисляет BERTScore (F1) для пары текстов.
 
-    if not ref_tokens or not cand_tokens:
+    :param reference: эталонный ответ
+    :param candidate: сгенерированный моделью ответ
+    :return: значение метрики от 0 до 1, где 1 — максимальное сходство
+    """
+    if not reference or not candidate:
         return 0.0
 
-    ref_set = set(ref_tokens)
-    cand_set = set(cand_tokens)
+    try:
+        # bert-score работает пакетно, поэтому оборачиваем строки в списки
+        P = [candidate]
+        R = [reference]
 
-    overlap = len(ref_set & cand_set)
-    union = len(ref_set | cand_set)
+        global _bert_model_initialized
+        P_scores, R_scores, F1_scores = bert_score(
+            P,
+            R,
+            model_type=_bert_model_type,
+            lang=_bert_model_lang,
+            rescale_with_baseline=True,
+        )
+        _bert_model_initialized = True
+        score = float(F1_scores[0])
+    except Exception:
+        score = 0.0
 
-    if union == 0:
-        return 0.0
+    # Подстраховка: ограничиваем результат диапазоном [0, 1]
+    if score < 0.0:
+        score = 0.0
+    elif score > 1.0:
+        score = 1.0
 
-    jaccard = overlap / union
-    len_ratio = min(len(cand_tokens), len(ref_tokens)) / max(len(cand_tokens), len(ref_tokens))
-    bert_like_score = jaccard * len_ratio
-
-    return bert_like_score
+    return score
 
 
 def generate_metrics_comparison_data(selected_models, selected_datasets, metrics_config):
