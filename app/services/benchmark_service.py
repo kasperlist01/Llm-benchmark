@@ -7,6 +7,7 @@ import requests
 from collections import Counter
 
 from app.models.user_dataset import UserDataset
+from app.schemas.benchmark_dto import RunBenchmarkRequest, RunBenchmarkResult
 
 
 def clean_model_response(response):
@@ -20,11 +21,27 @@ def clean_model_response(response):
     return response
 
 
-def run_benchmark(selected_models, selected_benchmark_ids, metrics_config, judge_model_id=None, selected_datasets=None):
+def run_benchmark(request: RunBenchmarkRequest) -> RunBenchmarkResult:
+    """
+    Запускает выбранные бенчмарки для переданных моделей и датасетов.
+
+    На вход принимает структурированный запрос RunBenchmarkRequest, а внутри
+    использует словари и списки в том же формате, что и раньше, чтобы не
+    затрагивать алгоритмы генерации данных. Возвращает RunBenchmarkResult,
+    который оборачивает готовый словарь с результатами для фронтенда.
+    """
+    # Преобразуем DTO моделей и датасетов в словари, совместимые с существующей логикой.
+    selected_models = [model.to_benchmark_dict() for model in request.models]
+    selected_datasets = [dataset.to_benchmark_dict() for dataset in request.datasets]
+
     if not selected_datasets or len(selected_datasets) == 0:
-        return {
+        return RunBenchmarkResult({
             'error': 'Необходимо выбрать хотя бы один датасет для проведения тестирования'
-        }
+        })
+
+    selected_benchmark_ids = request.selected_benchmark_ids
+    metrics_config = request.metrics_config
+    judge_model_id = request.judge_model_id
 
     metrics_comparison_selected = 'metrics_comparison' in selected_benchmark_ids
     blind_test_selected = 'blind_test' in selected_benchmark_ids
@@ -33,26 +50,27 @@ def run_benchmark(selected_models, selected_benchmark_ids, metrics_config, judge
 
     if metrics_comparison_selected:
         if len(selected_benchmark_ids) > 1:
-            return {'error': 'Сравнение по метрикам нельзя комбинировать с другими тестами'}
+            return RunBenchmarkResult({'error': 'Сравнение по метрикам нельзя комбинировать с другими тестами'})
 
         api_models = [model for model in selected_models if model.get('api_url')]
         if len(api_models) == 0:
-            return {'error': 'Сравнение по метрикам требует хотя бы одну модель с доступом к API'}
+            return RunBenchmarkResult({'error': 'Сравнение по метрикам требует хотя бы одну модель с доступом к API'})
 
         metrics_data = generate_metrics_comparison_data(api_models, selected_datasets, metrics_config)
         if 'error' in metrics_data:
-            return metrics_data
-        return {
+            return RunBenchmarkResult(metrics_data)
+        return RunBenchmarkResult({
             'metricsComparison': metrics_data,
             'testType': 'metrics_comparison'
-        }
+        })
 
     if blind_test_selected or judge_eval_selected:
         api_models = [model for model in selected_models if model.get('api_url')]
 
         if len(api_models) < 2:
-            return {
-                'error': f'{"Слепой тест" if blind_test_selected else "Оценка судьёй"} требует как минимум 2 модели с доступом к API'}
+            return RunBenchmarkResult({
+                'error': f'{"Слепой тест" if blind_test_selected else "Оценка судьёй"} требует как минимум 2 модели с доступом к API'
+            })
 
         if len(api_models) > 2:
             models_for_special_test = random.sample(api_models, 2)
@@ -64,44 +82,44 @@ def run_benchmark(selected_models, selected_benchmark_ids, metrics_config, judge
     if blind_test_selected and len(models_for_special_test) == 2:
         blind_test_data = generate_blind_test_data(models_for_special_test, selected_datasets)
         if 'error' in blind_test_data:
-            return blind_test_data
-        return {
+            return RunBenchmarkResult(blind_test_data)
+        return RunBenchmarkResult({
             'blindTest': blind_test_data,
             'testType': 'blind_test'
-        }
+        })
 
     if judge_eval_selected and len(models_for_special_test) == 2:
         if not judge_model_id:
-            return {'error': 'Для оценки судьёй необходимо выбрать модель-судью'}
+            return RunBenchmarkResult({'error': 'Для оценки судьёй необходимо выбрать модель-судью'})
 
         judge_eval_data = generate_judge_eval_data(models_for_special_test, judge_model_id, selected_datasets)
         if 'error' in judge_eval_data:
-            return judge_eval_data
-        return {
+            return RunBenchmarkResult(judge_eval_data)
+        return RunBenchmarkResult({
             'judgeEval': judge_eval_data,
             'testType': 'judge_eval'
-        }
+        })
 
     if reference_comparison_selected:
         if not judge_model_id:
-            return {'error': 'Для сравнения с эталоном необходимо выбрать модель-судью'}
+            return RunBenchmarkResult({'error': 'Для сравнения с эталоном необходимо выбрать модель-судью'})
 
         api_models = [model for model in selected_models if model.get('api_url')]
         if len(api_models) == 0:
-            return {'error': 'Сравнение с эталоном требует хотя бы одну модель с доступом к API'}
+            return RunBenchmarkResult({'error': 'Сравнение с эталоном требует хотя бы одну модель с доступом к API'})
 
         reference_data = generate_reference_comparison_data(api_models, judge_model_id, selected_datasets)
         if 'error' in reference_data:
-            return reference_data
-        return {
+            return RunBenchmarkResult(reference_data)
+        return RunBenchmarkResult({
             'referenceComparison': reference_data,
             'testType': 'reference_comparison'
-        }
+        })
 
-    return {
+    return RunBenchmarkResult({
         'testType': 'none',
         'error': 'Не выбраны допустимые тесты'
-    }
+    })
 
 
 def load_prompts_from_datasets(selected_datasets):
